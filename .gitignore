@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.env
+.venv
+
+# Generated logs (RITA import artifacts)
+demo_logs/
+demo_logs_v2/
+demo_logs_split/
+*.log
+
+# Output files
+results/
+out/
+*.json
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
