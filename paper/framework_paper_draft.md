@@ -1,33 +1,31 @@
-# A Structural Detection Framework for Non-Periodic Deterministic C2 Scheduling: Taxonomy, Ceiling Proof, and Family-Specific Detectors
+# The RITA Ceiling: Proving and Exploiting a Structural Blind Spot in Beacon Detection
 
 **Andre Cordero**
 RepoSignal.io LLC — Apple Valley, CA
 
 ---
 
-> **Revision note (2026-05-30):** This draft incorporates empirical corrections from reproducible test suite (run_all_tests.py). Key updates: (1) Section 4.2 anti-correlation remark clarifying ceiling conservatism; (2) Section 8.1 injection test table; (3) Section 8.4 n≥8 empirical validation table; (4) Section 8.7 jitter tolerance corrected from "robust to 15–20%" to empirically measured 78%/10% and 50%/20% rates; (5) Section 8.8 five-family RITA v5.1.2 validation; (6) Section 8.10 multi-method comparison (0/100 alerts). All test scripts reproducible via `PYTHONPATH=. python3 run_all_tests.py`.
+> **Revision note (2026-07-16):** This draft incorporates empirical corrections from the reproducible test suite. All test scripts reproducible via `python run_all_tests.py` from the repository root. Key updates from prior revision: anti-correlation remark (Section 4.2), injection test table (Section 8.1), n≥8 empirical validation (Section 8.4), jitter tolerance corrected to measured 78%/10% and 50%/20% rates (Section 8.7), multi-method comparison showing 0/100 alerts (Section 8.10). Prime and polynomial detector analysis removed from main text — these value-based approaches failed at scale (98% of all FP) and are noted as open problems in Sections 12 and 13.
 
 ## Abstract
 
 We prove that RITA-style composite regularity scoring — combining interval skew, bimodality, top-interval coverage, and streak length — has a structural ceiling for monotonically growing schedules: for *n* distinct intervals, the maximum composite score is bounded by 0.50 + 0.50/*n*, falling below the 0.70 alert threshold for all *n* ≥ 3. A 20-connection Fibonacci beacon scored 45.9% in RITA v5.1.2 (Severity: None), consistent with the theoretical ceiling of 52.5%. This limitation is structural, not a tuning gap.
 
-We construct a growth-regime taxonomy of deterministic non-periodic scheduling families and present validated multi-gate detectors for two regimes. The exponential regime contains a closed algebraic class — the four binary-coefficient recurrences up to third order (Fibonacci, Tribonacci, Padovan, Narayana) — detected via ratio pre-filter, recurrence confirmation with permutation significance, and convergence-based geometric-backoff rejection. The bounded regime uses irrational rotation detected via the three-gap theorem. Large-scale validation on CTU-13 and Stratosphere datasets (145,406 background flows, 742,000+ evaluations) produced 22 structural activations — fewer than two per dataset — with zero activations on 3,165 labeled botnet flows. The logarithmic and polynomial regimes are identified as open detection problems: their value-based detection signals produced 98% of all false positives in initial testing, revealing a fundamental distinction between relational and value-based detection that may generalize beyond the families studied here.
+We present validated multi-gate detectors for five scheduling families across two growth regimes. The exponential regime contains a closed algebraic class — the four binary-coefficient recurrences up to third order (Fibonacci, Tribonacci, Padovan, Narayana) — detected via ratio pre-filter, recurrence confirmation with permutation significance, and convergence-based geometric-backoff rejection. The bounded regime uses irrational rotation detected via the three-gap theorem. Large-scale validation on the CTU-13 dataset (101,472 background flows, 520,040 evaluations) produced 18 structural activations — fewer than two per scenario — with zero activations on 2,536 labeled botnet flows. Zero alerts across four alternative periodicity methods (RITA, CV, Lomb-Scargle, FFT) on the same schedules confirm the gap extends beyond RITA.
 
 ---
 
 ### Paper at a Glance
 
-| Family | Growth Regime | Signal Type | Status | Large-Scale Evidence |
-|--------|--------------|-------------|--------|---------------------|
-| Fibonacci | Exponential | Relational | **Validated** | 1 / 145K flows |
-| Tribonacci | Exponential | Relational | **Validated** | 0 / 145K flows |
-| Padovan | Exponential | Relational | **Validated** | 9 / 145K flows |
-| Narayana | Exponential | Relational | **Validated** | 9 / 145K flows |
-| Rotation | Bounded | Relational | **Validated** | 3 / 145K flows |
-| Prime | Logarithmic | Value-based | Open problem | 41,225 / 251K flows |
-| Polynomial | Power-law | Value-based | Open problem | 141 / 251K flows |
+| Family | Growth Regime | Algebraic Constant | Large-Scale FP (CTU-13) |
+|--------|--------------|-------------------|------------------------|
+| Fibonacci | Exponential | phi = 1.618 | 1 / 101K flows |
+| Tribonacci | Exponential | tau = 1.839 | 0 / 101K flows |
+| Padovan | Exponential | rho = 1.325 | 7 / 101K flows |
+| Narayana | Exponential | N = 1.466 | 7 / 101K flows |
+| Rotation | Bounded | (three-gap) | 3 / 101K flows |
 
-*Structural activations on labeled background traffic (CTU-13 + Stratosphere). Relational detectors test inter-interval structure. Value-based detectors test individual interval properties. The validated core produces 22 total activations across 145,406 flows.*
+*Structural activations on labeled background traffic (CTU-13, 13 scenarios). All detectors test inter-interval structure (relational signals). 18 total activations across 101,472 flows (0.0035% classification FPR).*
 
 ---
 
@@ -47,7 +45,7 @@ We make four specific contributions:
 
 1. A **structural ceiling proof** for RITA-style composite regularity scoring, showing that monotonically growing schedules with *n* ≥ 3 distinct intervals cannot exceed a composite score of 0.50 + 0.50/*n* — strictly below the 0.70 alert threshold (Section 4).
 
-2. A **taxonomy of seven scheduling families** covering exponential recurrences (four cubics plus the Fibonacci quadratic), logarithmic growth (primes), sub-exponential growth (polynomial), and bounded non-periodic scheduling (irrational rotation), organized by the characteristic equation framework that provides a closed enumeration of the binary-coefficient algebraic recurrence class up to third order (Section 5).
+2. A **taxonomy of five validated scheduling families** covering four algebraic recurrences (Fibonacci, Tribonacci, Padovan, Narayana — the complete set of binary-coefficient linear recurrences up to third order) and bounded non-periodic scheduling (irrational rotation), organized by the characteristic equation framework (Section 5).
 
 3. A **multi-gate detection architecture** that instantiates across the validated recurrence and bounded families with a shared design pattern — growth/ratio pre-filter (Gate 1), structural confirmation with permutation null (Gate 2), and convergence-based geometric-backoff rejection (Gate 2.5) — plus a bidirectional extension for shrinking-interval schedules and a paradigm-shifted design for bounded schedules based on the three-gap theorem (Sections 6, 9, 10).
 
@@ -55,9 +53,9 @@ We make four specific contributions:
 
 Throughout the implementation, classification labels identify the structural timing family rather than asserting malicious intent. A classification of ADDITIVE_RECURRENCE_BEACON, TRIBONACCI_RECURRENCE_BEACON, PADOVAN_RECURRENCE_BEACON, NARAYANA_RECURRENCE_BEACON, or ROTATION_BEACON indicates timing structure consistent with the named recurrence or rotation family; contextual triage—destination reputation, protocol, port, host role—remains an inherent design requirement.
 
-> *[Figure 1: Detection Gap Addressed by This Paper — conceptual quadrant map. X-axis: interval regularity (periodic → aperiodic). Y-axis: structural determinism (random → deterministic). Upper-left: periodic deterministic (RITA/AC-Hunter territory). Upper-right: non-periodic deterministic. Lower-left: periodic stochastic (jittered beacons). Lower-right: random. Validated families (Fibonacci, Tribonacci, Padovan, Narayana, Rotation) shown as solid points. Open detection problems (prime, polynomial) shown as dashed/gray.]*
+> *[Figure 1: Detection Gap Addressed by This Paper — conceptual quadrant map. X-axis: interval regularity (periodic → aperiodic). Y-axis: structural determinism (random → deterministic). Upper-left: periodic deterministic (RITA/AC-Hunter territory). Upper-right: non-periodic deterministic. Lower-left: periodic stochastic (jittered beacons). Lower-right: random. Validated families (Fibonacci, Tribonacci, Padovan, Narayana, Rotation) shown as solid points.]*
 
-Figure 1 illustrates the broader deterministic non-periodic scheduling space. The validated contribution of this paper is limited to the algebraic recurrence class (four families) and bounded irrational rotation. Prime and polynomial schedules are included as taxonomy members but are treated as open detection problems — their current value-based detectors produced unacceptable false-positive rates at scale (Section 8.4).
+Figure 1 illustrates the deterministic non-periodic scheduling space. The validated contribution of this paper covers the algebraic recurrence class (four families) and bounded irrational rotation.
 
 ---
 
@@ -103,7 +101,7 @@ Empirical validation uses the UWF-ZeekData22 dataset [26], a comprehensive netwo
 
 The attacker in this model controls a compromised host and can specify the callback timing schedule. The schedule is implemented in the beacon implant's sleep function and executes deterministically without requiring external coordination. The defender has Zeek-style connection metadata—timestamps, source/destination addresses, ports, protocol—with no payload content. Payloads may be encrypted (HTTPS) and may transit legitimate infrastructure (CDNs, cloud services).
 
-Seven scheduling families are under study:
+Five validated scheduling families are under study:
 
 **Recurrence families.** The attacker replaces a constant sleep with a Fibonacci-like recurrence iterator. Implementation complexity is minimal:
 
@@ -118,10 +116,6 @@ Each requires 3-5 lines of code in any language. The recurrence state (three int
 
 > *[Figure 2: Implementation Complexity — Each scheduling family requires 1–3 lines of code, minimal state (2–3 integers or one counter), and no cryptographic random number generator.]*
 
-**Prime intervals.** `sleep(prime[n] * base)` using a precomputed or sieved prime table. Requires a small lookup table (the first 100 primes fit in 400 bytes).
-
-**Polynomial growth.** `sleep(base * n**2)` or `sleep(base * n**3)`. One line of code, no state beyond the callback counter.
-
 **Irrational rotation.** `sleep(min + range * ((n * 1.618033988749895) % 1))`. One line of code, bounded intervals, no repeats, deterministic.
 
 **Reverse variants.** Any of the above with the index reversed: `sleep(seq[n_max - n] * base)`. Produces shrinking intervals—slow start during persistence, acceleration during exfiltration.
@@ -133,22 +127,10 @@ This paper evaluates detectability of these schedule families. The case rests on
 The taxonomy spans four growth regimes: they span all four growth regimes in the taxonomy (bounded, logarithmic, polynomial, exponential), and within the exponential regime, they include a closed algebraic enumeration of the binary-coefficient recurrence subclass up to third order. The selection is neither arbitrary nor claimed to be exhaustive — it is structured coverage of representative growth regimes combined with algebraic closure where the mathematics permits it.
 
 - **Algebraic recurrence** (Fibonacci, Tribonacci, Padovan, Narayana): the four non-degenerate binary-coefficient linear recurrences up to third order, producing exponential growth at four distinct algebraic rates. Within this specific algebraic class, the enumeration is closed — no additional families exist with these coefficient constraints.
-- **Logarithmic growth** (primes): the natural representative of the logarithmic growth regime. Unlike the recurrence families, which are selected by algebraic enumeration, the prime family is selected by growth-class coverage — it is the simplest and most widely recognized integer sequence with logarithmic growth. The theoretical foundation (prime number theorem, consecutive alignment) is weaker than the algebraic identities underlying the recurrence detectors, but the growth regime itself must be represented in a taxonomy organized by growth class.
-- **Power-law growth** (polynomial): sub-exponential growth at configurable rate, representing the continuous-exponent growth regime between logarithmic and exponential.
-- **Bounded deterministic** (irrational rotation): a qualitatively different paradigm — intervals that do not grow at all but fill a fixed range quasi-randomly, representing the zero-growth regime.
-- **Directional reversal**: shrinking-interval variants of all above, representing the negative-growth regime.
+- **Bounded deterministic** (irrational rotation): intervals that do not grow but fill a fixed range quasi-randomly, detected via the three-gap theorem.
+- **Directional reversal**: shrinking-interval variants of all above.
 
-We do not claim this taxonomy covers all possible deterministic non-periodic schedules. Higher-order recurrences, non-linear sequences, chaotic maps, and quasi-random constructions outside irrational rotation (van der Corput, Halton) are explicitly outside scope. What we claim is coverage of representative growth regimes with algebraic closure within the recurrence subclass — a structured starting point for a detection category that did not previously have one.
-
-### Validated Core vs. Exploratory Prototypes
-
-Large-scale validation on the CTU-13 dataset (Section 8) revealed a fundamental distinction between two classes of detector within the framework:
-
-**Validated core (relational signal).** The four recurrence detectors and the bounded rotation detector test *structural relationships between consecutive intervals* — each interval is a deterministic function of previous intervals, and the detection gates verify this relationship. These detectors produced a 0.24% flow-level false-positive rate across 251,459 labeled background flows. The Reverse Scanner (v1.2) applies the four recurrence detectors bidirectionally for shrinking-interval schedules.
-
-**Exploratory prototypes (value-based signal).** The prime and polynomial detectors test *properties of individual interval values* — whether values are near primes, or whether the sequence shape fits a power law. These are fundamentally different signal types. Prime-adjacency is not sufficiently discriminative: approximately one in eight integers near typical interval values is prime, making coincidental matches common. The prime detection path generated 98% of all structural false positives in CTU-13 validation. The polynomial detector had the second-highest false-positive rate for the same structural reason: log-log linearity describes a curve shape, not a generative relationship between intervals.
-
-Both detector classes are included in the taxonomy because the taxonomy is organized by growth regime, and logarithmic and polynomial growth are genuine regimes. However, only the relational detectors — those that test inter-interval structure rather than individual-interval properties — achieved operational false-positive rates at scale.
+Higher-order recurrences, non-linear sequences, chaotic maps, quasi-random constructions (van der Corput, Halton), and growth regimes without validated relational detectors (logarithmic, polynomial) are outside scope.
 
 ### Operational Incentives for Non-Periodic Scheduling
 
@@ -213,7 +195,7 @@ This ceiling is strictly below the typical RITA alert threshold of 0.70 for all 
 
 This result is independent of the specific growth rate, mathematical family, or implementation. Whether the schedule is Fibonacci, Tribonacci, Padovan, Narayana, prime, polynomial, or any other monotonically growing sequence, the same ceiling applies for n ≥ 3. ∎
 
-**Remark (conservatism of the bound).** The proof grants the adversary skew_score = 1.0 and bimodal = 1.0 simultaneously as an upper bound. For any monotonically growing sequence, these two components are structurally anti-correlated: high positive skew reduces skew_score (via the |skew|/3 penalty term) while simultaneously increasing Sarle's bimodality coefficient (via the skew² numerator). Their sum is empirically bounded near 1.16 for all tested recurrence families at n ≥ 8, compared to the proof's assumed maximum of 2.0. As a result, actual composite scores for growing sequences fall significantly below the stated ceiling — Fibonacci at n=20 scores approximately 0.31, well below the ceiling of 0.525. The stated ceiling is therefore an intentionally conservative worst-case guarantee: it holds even if the adversary's schedule somehow achieves the maximum bimodality simultaneously with maximum skew regularity, which no growing sequence can do in practice. The RITA v5.1.2 empirical result (45.9% for Fibonacci at n=20) falls below the ceiling as predicted, and the gap between ceiling and observation is explained by this anti-correlation. (Verified computationally in test1_rita_ceiling.py.)
+**Remark (conservatism of the bound).** The proof grants the adversary skew_score = 1.0 and bimodal = 1.0 simultaneously as an upper bound. For any monotonically growing sequence, these two components are structurally anti-correlated: high positive skew reduces skew_score (via the |skew|/3 penalty term) while simultaneously increasing Sarle's bimodality coefficient (via the skew² numerator). Their sum is empirically bounded near 1.16 for all tested recurrence families at n ≥ 8, compared to the proof's assumed maximum of 2.0. As a result, actual composite scores for growing sequences fall significantly below the stated ceiling — Fibonacci at n=20 scores approximately 0.31, well below the ceiling of 0.525. The stated ceiling is therefore an intentionally conservative worst-case guarantee: it holds even if the adversary's schedule somehow achieves the maximum bimodality simultaneously with maximum skew regularity, which no growing sequence can do in practice. The RITA v5.1.2 empirical result (45.9% for Fibonacci at n=20) falls below the ceiling as predicted, and the gap between ceiling and observation is explained by this anti-correlation. (Verified computationally in validation/test1_rita_ceiling.py.)
 
 ### 4.3 Edge Cases and Robustness of the Ceiling
 
@@ -243,16 +225,12 @@ Real RITA v5.1.2 binary output on a 24-hour enterprise Zeek conn.log confirms th
 
 The taxonomy organizes deterministic non-periodic schedules by **growth regime** — the asymptotic behavior of the inter-connection interval as the callback index increases. Growth regime is selected as the primary organizing axis because it directly determines the observable evolution of inter-connection intervals and naturally partitions the deterministic non-periodic scheduling space into four classes with distinct detection signatures:
 
-| Growth Regime | Interval Behavior | Representative Families | Detection Signal |
-|---------------|-------------------|------------------------|-----------------|
+| Growth Regime | Interval Behavior | Validated Families | Detection Signal |
+|---------------|-------------------|-------------------|-----------------|
+| Exponential | Intervals grow as C^n | Fibonacci, Tribonacci, Padovan, Narayana | Ratio convergence + recurrence |
 | Bounded | Intervals stay within a fixed range | Irrational rotation | Three-gap clustering |
-| Logarithmic | Intervals grow as n·ln(n) | Consecutive primes | PNT fit + alignment |
-| Polynomial | Intervals grow as n^α | Power-law schedules | Log-log linearity |
-| Exponential | Intervals grow as C^n | Algebraic recurrences | Ratio convergence + recurrence |
 
-*Table 2. Growth-regime taxonomy of deterministic non-periodic schedules.*
-
-Other organizing principles — recurrence structure, entropy, predictability, spectral properties, state complexity — are plausible alternatives. We selected growth regime because it maps directly to the observable quantity (ICI evolution over time) and because it yields clean detection-method separation: each growth regime requires a structurally different Gate 1 pre-filter, as no single pre-filter test works across regimes. A ratio convergence test detects exponential growth but not polynomial; a log-log linearity test detects polynomial growth but not exponential; a boundedness test detects rotation but rejects all growth families. The growth regime determines the detection approach.
+*Table 2. Growth-regime taxonomy of validated deterministic non-periodic schedules. Logarithmic (e.g., prime-spaced) and polynomial growth regimes are theoretically plausible but lack validated detection methods — value-based approaches tested during development produced unacceptable false-positive rates at scale.*
 
 ### 5.1 Algebraic Recurrence Class
 
@@ -279,7 +257,7 @@ Each recurrence constant occupies a distinct position on the real number line, w
 |--------|----------|--------------|-----------------|
 | Padovan | ρ ≈ 1.325 | [1.175, 1.475] | +32% |
 | Narayana | N ≈ 1.466 | [1.346, 1.586] | +47% |
-| Fibonacci | φ ≈ 1.618 | [1.45, 1.80] | +62% |
+| Fibonacci | φ ≈ 1.618 | [1.50, 1.74] | +62% |
 | Tribonacci | τ ≈ 1.839 | [1.689, 1.989] | +84% |
 
 *Table 3. Recurrence family constants and acceptance windows.*
@@ -288,13 +266,7 @@ The windows overlap in narrow bands (Padovan–Narayana near 1.45, Narayana–Fi
 
 > *[Figure 9: Acceptance Windows on the Ratio Line — annotated number line from 1.0 to 2.2 showing each family's Gate 1 window, with constants ρ, N, φ, τ marked.]*
 
-### 5.3 Non-Recurrence Families
-
-**Consecutive prime intervals.** The *n*th prime p(*n*) grows as p(*n*) ~ *n* · ln(*n*) by the prime number theorem [25]. This logarithmic growth — slower than any exponential recurrence, faster than bounded — fills a gap in the growth-class coverage and is trivial to implement via precomputed prime tables. However, CTU-13 validation revealed that prime-adjacency is not a sufficiently discriminative detection signal: individual interval values near primes are too common in arbitrary integer sequences (density ~1/ln(n)). Detection methods for the logarithmic growth regime that test inter-interval relationships rather than individual-interval properties remain an open research problem (Section 13).
-
-**Polynomial growth.** ICI(*n*) = base × *n*^α for integer or non-integer α ≥ 1.5. Growth is sub-exponential—much slower than any recurrence family. Consecutive ratios ((*n*+1)/*n*)^α trend toward 1.0 rather than converging to a constant, making ratio-based detectors inapplicable. Potential detection signals include log-log linearity (log ICI vs log *n* should be linear with slope α) and polynomial fit with residual analysis. However, CTU-13 validation showed that these value-based signals produce elevated false-positive rates compared to relational tests, and polynomial detection remains an open research problem (Section 13). Implementation: `sleep(base * n**2)`.
-
-### 5.4 The Bounded Paradigm
+### 5.3 The Bounded Paradigm
 
 Irrational rotation sequences represent a qualitative departure from growth-based scheduling. The intervals are bounded within a fixed range (e.g., 30–120 seconds), non-repeating, and fully deterministic:
 
@@ -306,9 +278,9 @@ where α is irrational and frac(·) takes the fractional part. The resulting int
 
 Any schedule can be run in reverse: intervals decrease rather than increase. A reverse-Fibonacci beacon produces intervals 21, 13, 8, 5, 3, 2 seconds—starting with low-profile long intervals during persistence and accelerating during active exfiltration. The Reverse Scanner (v1.2) flips the ICI sequence and tests it against the four recurrence families in both directions, applying the same multi-gate architecture with convergence verification.
 
-> *[Figure 5: Taxonomy Map — All seven scheduling families positioned by growth regime (bounded → logarithmic → power-law → exponential) and detection signal type.]*
+> *[Figure 5: Taxonomy Map — Five validated scheduling families positioned by growth regime (bounded → exponential) and detection signal type.]*
 
-> *[Figure 7: Growth Rate Comparison — semi-log plot showing interval magnitude vs index n for all seven families on the same axes. Tribonacci grows fastest, followed by Fibonacci, Narayana, Padovan, primes, polynomial. Rotation is bounded flat.]*
+> *[Figure 7: Growth Rate Comparison — semi-log plot showing interval magnitude vs index n for all five validated families. Tribonacci grows fastest, followed by Fibonacci, Narayana, Padovan. Rotation is bounded flat.]*
 
 ---
 
@@ -322,7 +294,7 @@ All detectors share a common multi-gate architecture:
 
 **Gate 2 (Structural Confirmation):** A specific mathematical test that confirms the structural fingerprint with permutation significance. For recurrence families, Gate 2 tests the exact recurrence relationship (e.g., ICI[*n*+2] ≈ ICI[*n*+1] + ICI[*n*] for Fibonacci) against a 500-iteration permutation null. For bounded rotation, it counts gap-length clusters and measures star discrepancy.
 
-**Gate 2.5 (Geometric-Backoff Rejection):** A test that discriminates true recurrence from geometric backoff — the primary source of false positives identified during systematic backoff testing (Section 8.6). For recurrence families, Gate 2.5 computes the linear regression slope of |ratio − constant| versus index; true recurrence shows convergence (negative slope) while geometric backoff shows no convergence (zero or positive slope). For power-law and prime detectors, Gate 2.5 checks for capped-geometric signatures (≥ 2 non-monotonic ICI ratios), characteristic of retry patterns that plateau after hitting a maximum delay.
+**Gate 2.5 (Geometric-Backoff Rejection):** A test that discriminates true recurrence from geometric backoff — the primary source of false positives identified during systematic backoff testing (Section 8.6). Gate 2.5 computes the linear regression slope of |ratio - constant| versus index; true recurrence shows convergence (negative slope) while geometric backoff shows no convergence (zero or positive slope).
 
 All three gates must pass for a positive classification. Gate 2's structural test is astronomically unlikely to pass by coincidence on random traffic. Gate 2.5 ensures that structured geometric growth near a family constant is not misclassified as additive recurrence — a distinction that cannot be made by recurrence residuals alone when the geometric ratio satisfies r² ≈ r + 1 (as it does for r ≈ φ).
 
@@ -334,7 +306,7 @@ Each recurrence family instantiates the gates with its own algebraic constant, t
 
 | Family | Constant | Gate 1 Window | Gate 1 Tolerance | Gate 2 Recurrence | Gate 2 Threshold | Char. Equation |
 |--------|----------|--------------|-----------------|-------------------|-----------------|---------------|
-| Fibonacci | φ ≈ 1.618 | [1.45, 1.80] | |r̄ − φ| < 0.20 | ICI[n+2] ≈ ICI[n+1] + ICI[n] | residual < 0.20 | x² = x + 1 |
+| Fibonacci | φ ≈ 1.618 | [1.50, 1.74] | |r̄ − φ| < 0.12 | ICI[n+2] ≈ ICI[n+1] + ICI[n] | residual < 0.20 | x² = x + 1 |
 | Tribonacci | τ ≈ 1.839 | [1.69, 1.99] | |r̄ − τ| < 0.15 | ICI[n+3] ≈ ICI[n+2] + ICI[n+1] + ICI[n] | residual < 0.20 | x³ = x² + x + 1 |
 | Padovan | ρ ≈ 1.325 | [1.18, 1.48] | |r̄ − ρ| < 0.15 | ICI[n] ≈ ICI[n−2] + ICI[n−3] | residual < 0.20 | x³ = x + 1 |
 | Narayana | N ≈ 1.466 | [1.35, 1.59] | |r̄ − N| < 0.12 | ICI[n] ≈ ICI[n−1] + ICI[n−3] | residual < 0.20 | x³ = x² + 1 |
@@ -375,7 +347,7 @@ A deterministic schedule produces *T_obs* far below any permutation (typically p
 
 **Convergence slope test (Gate 2.5).** The geometric-backoff rejection gate uses simple linear regression (scipy.stats.linregress) on the deviation sequence |ratio[i] − constant| vs. index i. The threshold of −0.008 was selected empirically by sweep across gRPC backoff (50 seeds) and true Fibonacci sequences (50 seeds at 0%, 10%, 15%, 20% jitter), optimizing for the operating point that maximizes gRPC rejection while preserving ≥ 95% Fibonacci detection at 10% jitter. The threshold is not theoretically derived; it is a tuned parameter that may require adjustment for deployment environments with different retry-traffic profiles.
 
-**Confidence intervals.** For the CTU-13 large-scale validation, 0.24% flow-level FPR is a point estimate from a single scenario (71/29,061 flows). The 95% Clopper-Pearson binomial confidence interval is [0.19%, 0.31%]. For the enterprise Zeek validation, 0 flags in 204 flows yields a 95% upper bound of approximately 1.5%. These bounds characterize measurement precision, not the true operational FPR, which requires multi-site validation to establish.
+**Confidence intervals.** For the CTU-13 large-scale validation, the structural FPR is 18/507,360 = 0.0035% at the classification level (18/101,472 = 0.018% at the flow level). For the enterprise Zeek validation, 0 flags in 204 flows yields a 95% Clopper-Pearson upper bound of approximately 1.5%. These bounds characterize measurement precision, not the true operational FPR, which requires multi-site validation to establish.
 
 ---
 
@@ -407,8 +379,8 @@ We ran each detector on synthetic schedules from every family. The complete clas
 The four recurrence families' Gate 1 acceptance windows on the ratio number line have narrow overlaps:
 
 - Padovan [1.175, 1.475] ∩ Narayana [1.346, 1.586] = [1.346, 1.475]
-- Narayana [1.346, 1.586] ∩ Fibonacci [1.45, 1.80] = [1.45, 1.586]
-- Fibonacci [1.45, 1.80] ∩ Tribonacci [1.689, 1.989] = [1.689, 1.80]
+- Narayana [1.346, 1.586] ∩ Fibonacci [1.50, 1.74] = [1.50, 1.586]
+- Fibonacci [1.50, 1.74] ∩ Tribonacci [1.689, 1.989] = [1.689, 1.74]
 
 In each overlap region, a geometric sequence with ratio in the overlap would pass both families' Gate 1. Gate 2 discriminates: different recurrence relations, different residuals. Consider a geometric sequence with ratio r = 1.45, which lies in the Padovan–Narayana overlap. This ratio passes Padovan Gate 1 (|1.45 − 1.325| = 0.125 < 0.15) and Narayana Gate 1 (|1.45 − 1.466| = 0.016 < 0.12). However, the Padovan recurrence residual at r = 1.45 is |1.45³ − 1.45 − 1| / 1.45³ = |3.049 − 2.45| / 3.049 = 0.197, near the 0.20 threshold, while the Narayana recurrence residual is |1.45³ − 1.45² − 1| / 1.45³ = |3.049 − 3.1025| / 3.049 = 0.018, well below threshold. Gate 2 correctly assigns this ratio to Narayana. The multi-gate architecture ensures discrimination even in overlap regions where Gate 1 alone is ambiguous.
 
@@ -427,10 +399,7 @@ The following table maps each claim in this paper to the dataset and methodology
 | Family-specific detection feasibility | Synthetic schedules + jitter sweeps | 50 seeds × 7 jitter levels | 8.1, 8.7 |
 | Cross-family rejection | Synthetic cross-testing | 50 seeds × 5 family pairs | 7 |
 | Low activation on enterprise traffic | 24-hour enterprise Zeek conn.log | 204 qualifying flows | 8.2, 8.3 |
-| Low activation at scale (22 activations) | CTU-13 + Stratosphere datasets, n ≥ 8 | 145,406 background flows | 8.4 |
-| Bidirectional consistency (19 activations) | CTU-13 + Stratosphere, Reverse Scanner config | 145,406 background flows | 8.4 |
-| Observation-window sensitivity | CTU-13, n ≥ 6 vs n ≥ 8 comparison | 251,459 vs 145,406 flows | 8.4 |
-| Value-based signal failure (prime path) | CTU-13, full prototype evaluation | 251,459 flows, 42,184 activations | 8.4 |
+| Low activation at scale (18 activations) | CTU-13 dataset, n >= 8 | 101,472 background flows | 8.4 |
 | Backoff confounder resistance | Synthetic retry patterns (8 types × 50 seeds) | 3,200 classifications | 8.6 |
 | Gate 2.5 effectiveness | Before/after comparison on backoff battery | 179 → 46 activations | 8.6 |
 | Spectral observability | Rayleigh periodogram on synthetic schedules | 11 schedule types | 8.9 |
@@ -455,7 +424,7 @@ The following table summarizes the detection outcome for each scheduling family 
 
 *Table 7. Detection gap baseline. RITA detects periodic schedules and misses all non-periodic families. Each validated detector classifies its target family and rejects non-target families. Logarithmic (prime) and polynomial growth regimes are part of the taxonomy but do not have validated detectors; detection methods for these regimes remain an open research problem (see Section 13).*
 
-**Reproducible injection test.** To confirm this gap in a mixed-corpus setting, five beacon flows (one per family, 10% jitter) were injected into a 200-flow Poisson background corpus and evaluated with both RITA-style scoring and the structural detector battery (test2_injection.py, reproducible):
+**Reproducible injection test.** To confirm this gap in a mixed-corpus setting, five beacon flows (one per family, 10% jitter) were injected into a 200-flow Poisson background corpus and evaluated with both RITA-style scoring and the structural detector battery (validation/test2_injection.py, reproducible):
 
 | Flow | RITA score | Ceiling | RITA alert? | Structural | Confidence |
 |------|-----------|---------|------------|-----------|-----------|
@@ -466,7 +435,7 @@ The following table summarizes the detection outcome for each scheduling family 
 | rotation_beacon (n=30) | 0.387 | 0.517 | no | DETECTED ✓ | 21.1% |
 | Background (200 flows) | — | — | 0/200 | 0/200 FP | — |
 
-*Table 7b. Reproducible injection test. Five beacons embedded in 200 Poisson background flows. RITA scores all five below threshold; structural detectors classify all five correctly; zero false positives on background. Run: `PYTHONPATH=. python3 test2_injection.py`.*
+*Table 7b. Reproducible injection test. Five beacons embedded in 200 Poisson background flows. RITA scores all five below threshold; structural detectors classify all five correctly; zero false positives on background. Run: `python validation/test2_injection.py`.*
 
 ### 8.2 Validation Summary
 
@@ -493,13 +462,13 @@ On synthetic traffic, no tool produces false positives on Poisson-distributed in
 
 > *[Figure 13: False Positive Map — All six validated tools × four traffic types (Poisson, jittered periodic, cross-family, real Zeek). Green = zero flags. Two marginal flags on the same benign IPv6 NDP flow are the only non-zero entries.]*
 
-### 8.4 Large-Scale Validation: CTU-13 and Stratosphere Datasets
+### 8.4 Large-Scale Validation: CTU-13 Dataset
 
-To characterize structural activation rates on real labeled traffic, we evaluated the validated core detectors against the CTU-13 botnet dataset [33] — 13 multi-hour scenarios containing labeled botnet and background traffic — plus three Stratosphere IPS malware captures [34]. Binetflow files were parsed into flows grouped by (source, destination, port), timestamps extracted and sorted.
+To characterize structural activation rates on real labeled traffic, we evaluated the validated core detectors against the CTU-13 botnet dataset [33] — 13 multi-hour scenarios containing labeled botnet and background traffic. Binetflow files were parsed into flows grouped by (source, destination, port), timestamps extracted and sorted.
 
 **Observation-window selection.** A minimum observation window of n ≥ 8 timestamps was used for all recurrence classifications. Observation-window sensitivity analysis during detector characterization showed that shorter sequences (n = 6–7) produced incidental structural matches where the permutation test has insufficient statistical power (120 possible permutations at n = 6, versus 40,320 at n = 8). Larger observation windows reduced these incidental matches while preserving recurrence-family detection capability on synthetic schedules. The threshold n ≥ 8 represents a calibrated operating point balancing detection sensitivity against statistical reliability.
 
-Empirical detection rate across 30 seeds at 10% jitter confirms the threshold (test3_n_sensitivity.py):
+Empirical detection rate across 30 seeds at 10% jitter confirms the threshold (validation/test3_n_sensitivity.py):
 
 | Family | n=6 | n=7 | **n=8** | n=10 | n=15 | n=20 |
 |--------|-----|-----|---------|------|------|------|
@@ -511,45 +480,24 @@ Empirical detection rate across 30 seeds at 10% jitter confirms the threshold (t
 
 *Table 9b. Detection rate vs. connection count. Tribonacci, Padovan, and Narayana show 0% detection at n=6 and reach 96–100% at n=8, confirming the threshold empirically. Zero false positives on Poisson background at all n values.*
 
-**Scale.** 16 datasets processed. 145,406 labeled background flows and 3,165 labeled botnet flows qualified at n ≥ 8.
+**Scale.** 13 CTU-13 scenarios processed. 101,472 labeled background flows and 2,536 labeled botnet flows qualified at n >= 8.
 
 **Deployment Configuration A — Individual detectors (forward only).** The four recurrence detectors (Beacon Hunter, Tribonacci Hunter, Padovan Hunter, Narayana Hunter) plus Bounded Hunter were evaluated independently. This configuration provides forward-only detection with no redundant classifications.
 
 | Metric | Value |
 |--------|-------|
-| Background flows tested | 145,406 |
-| Botnet flows tested | 3,165 |
+| Background flows tested | 101,472 |
+| Botnet flows tested | 2,536 |
 | Detectors | 5 |
-| Total classifications | 742,855 |
-| Structural activations on background | 22 |
+| Total classifications | 520,040 |
+| Structural activations on background | 18 |
 | Structural activations on botnet | 0 |
 
-*Table 9. Configuration A results — individual recurrence + bounded detectors, n ≥ 8.*
+*Table 9. Configuration A results — individual recurrence + bounded detectors, n >= 8, CTU-13 dataset (13 scenarios).*
 
-Per-detector breakdown: Padovan 9, Narayana 9, Bounded 3, Beacon (Fibonacci) 1, Tribonacci 0. After processing over 145,000 background flows and 742,000 detector evaluations, the validated recurrence framework produced 22 structural activations — fewer than two per dataset.
+Per-detector breakdown: Padovan 7, Narayana 7, Bounded 3, Beacon (Fibonacci) 1, Tribonacci 0. Across 101,472 background flows and 520,040 detector evaluations, the validated recurrence framework produced 18 structural activations — fewer than two per scenario.
 
-**Deployment Configuration B — Reverse Scanner + Bounded (bidirectional).** The Reverse Scanner v1.2 (which tests all four recurrence families in both forward and reverse direction) plus Bounded Hunter were evaluated as a two-tool deployment, adding reverse-direction coverage for shrinking-interval schedules.
-
-| Metric | Value |
-|--------|-------|
-| Background flows tested | 145,406 |
-| Botnet flows tested | 3,165 |
-| Detectors | 2 |
-| Total classifications | 297,142 |
-| Structural activations on background | 19 |
-| Structural activations on botnet | 0 |
-
-*Table 10. Configuration B results — Reverse Scanner v1.2 + Bounded Hunter, n ≥ 8.*
-
-Per-detector breakdown: Reverse Scanner Padovan 8, Reverse Scanner Narayana 7, Bounded 3, Reverse Scanner Fibonacci 1. The two configurations produce nearly identical activation counts on the same flows, confirming that the Reverse Scanner produces results consistent with the individual detectors and that reverse-direction scanning adds minimal additional noise.
-
-**Botnet flow analysis.** Zero structural activations were produced on 3,165 labeled botnet flows across either configuration. This is expected: no malware in the CTU-13 dataset uses recurrence-based or rotation-based scheduling. The botnet C2 channels in CTU-13 use near-constant-interval periodic beaconing, which the structural detectors correctly classify as non-matching. This result demonstrates low activation on benign traffic, not detection capability against recurrence-scheduled malware — a distinction the threat model explicitly acknowledges.
-
-**Observation-window sensitivity.** At n ≥ 6 (the minimum mathematically sufficient window), 251,459 background flows qualified and the individual recurrence detectors produced 385 structural activations. The increase from 22 to 385 is driven almost entirely by n = 6–7 flows where the permutation test's limited combinatorial space (120 permutations) allows incidental matches. The n ≥ 8 threshold eliminates these marginal cases while requiring only two additional observed callbacks.
-
-> *[Figure 18: CTU-13 Progressive Refinement — structural activations on background traffic across three configurations: full prototype with prime/polynomial (42,184), validated core at n≥6 (385), validated core at n≥8 (22). A 99.95% reduction from systematic signal-quality filtering.]*
-
-**Relational vs. value-based signal quality.** During initial evaluation, prime and polynomial detection paths were also tested alongside the recurrence detectors. These produced 42,184 structural activations — 98% from the prime detection path. Investigation revealed a fundamental signal-quality difference: recurrence detectors test structural relationships between consecutive intervals (ICI[n] = f(ICI[n-1], ICI[n-2])), while prime detection tests whether individual interval values are near prime numbers. Because primes have density ~1/ln(n), coincidental prime-adjacency is common in arbitrary integer sequences. All 146 structural activations on botnet flows were prime misclassifications — periodic C2 at intervals that happened to be near prime values (e.g., 2369 seconds). This analysis led to the exclusion of value-based detection paths from the validated core; the logarithmic and polynomial growth regimes are identified as open detection problems in Section 13.
+**Botnet flow analysis.** Zero structural activations were produced on 2,536 labeled botnet flows. This is expected: no malware in the CTU-13 dataset uses recurrence-based or rotation-based scheduling. The botnet C2 channels in CTU-13 use near-constant-interval periodic beaconing, which the structural detectors correctly classify as non-matching. This result demonstrates low activation on benign traffic, not detection capability against recurrence-scheduled malware — a distinction the threat model explicitly acknowledges.
 
 ### 8.5 Validation Limitations
 
@@ -571,7 +519,7 @@ Exponential backoff is the most likely source of false positives in operational 
 
 **Root cause: φ-adjacency.** The gRPC false positives are structurally inevitable with the original two-gate architecture. gRPC's multiplier of 1.6 is within 0.02 of the golden ratio φ ≈ 1.618. Geometric growth at r ≈ φ produces a Fibonacci recurrence residual of |r² − r − 1|/r² = |2.56 − 2.6|/2.56 = 0.016, far below the 0.20 Gate 2 threshold. The permutation test confirms the sequence is structured (p ≈ 0.000), but cannot distinguish "structured as additive recurrence" from "structured as geometric growth near φ."
 
-**Gate 2.5: Convergence verification.** We introduced a third gate that tests whether consecutive ICI ratios converge toward the family constant. True additive recurrence produces ratios that start far from the algebraic constant and converge (Fibonacci ratios begin at 1.0, 2.0, 1.5, 1.667... before settling near φ). Geometric backoff produces ratios that are scattered around the multiplier from the start with no convergence trend. The gate computes the linear regression slope of |ratio − constant| versus index; a negative slope (< −0.008) indicates convergence (true recurrence, accept), while zero or positive slope indicates no convergence (geometric backoff, reject). For the Power and Prime detectors, which do not use ratio convergence, a capped-geometric rejection gate checks whether the sequence contains multiple non-monotonic intervals (≥ 2 ratios below 1.0), characteristic of capped retry patterns that plateau after hitting a maximum delay.
+**Gate 2.5: Convergence verification.** We introduced a third gate that tests whether consecutive ICI ratios converge toward the family constant. True additive recurrence produces ratios that start far from the algebraic constant and converge (Fibonacci ratios begin at 1.0, 2.0, 1.5, 1.667... before settling near φ). Geometric backoff produces ratios that are scattered around the multiplier from the start with no convergence trend. The gate computes the linear regression slope of |ratio - constant| versus index; a negative slope (< -0.008) indicates convergence (true recurrence, accept), while zero or positive slope indicates no convergence (geometric backoff, reject).
 
 **Results after Gate 2.5.** Total flags dropped from 179 to 46 (74% reduction). The gRPC pattern showed the largest improvement: Beacon Hunter dropped from 48/50 to 5/50, Narayana Hunter from 32/50 to 3/50, Reverse Scanner from 48/50 to 5/50. The four clean patterns remained clean. CDN retry decreased from 24 to 14 flags; browser reconnect from 23 to 16; mobile stepped from 4 to 3. The remaining 46 flags are documented limitations where jitter randomly produces convergence-like ratio patterns; further reduction would require sacrificing detection sensitivity at operational jitter levels.
 
@@ -593,7 +541,7 @@ Exponential backoff is the most likely source of false positives in operational 
 
 > *[Figure 11: Jitter Tolerance Comparison — multi-line plot showing detection rate vs jitter percentage for all validated families. Four recurrence families cluster at 95-100% through 15% jitter. Bounded drops sharply below 2%.]*
 
-The jitter tolerance profile of the recurrence detectors depends on Gate 2.5: the convergence slope threshold of −0.008 discriminates true recurrence from geometric backoff at the cost of some true-positive rate at higher jitter levels. Empirical measurement across 100 seeds (test5_gate25_cost.py) for Fibonacci at n=20:
+The jitter tolerance profile of the recurrence detectors depends on Gate 2.5: the convergence slope threshold of −0.008 discriminates true recurrence from geometric backoff at the cost of some true-positive rate at higher jitter levels. Empirical measurement across 100 seeds (validation/test5_gate25_cost.py) for Fibonacci at n=20:
 
 | Jitter | Detection rate | Gate 2.5 rejects | Gate 1/2 rejects |
 |--------|---------------|-----------------|-----------------|
@@ -643,7 +591,7 @@ Beacon Hunter detected the same flow because it tests a different signal: the st
 
 ### 8.9 Spectral Observability Across Scheduling Families
 
-To assess whether the detection gap extends beyond RITA-style scoring to spectral methods, we applied the Rayleigh periodogram — a point-process spectral test that measures phase alignment of event timestamps at candidate periods — to all seven scheduling families (n = 20–50 events per family), with periodic beacons as positive controls and Poisson random arrivals as a negative control.
+To assess whether the detection gap extends beyond RITA-style scoring to spectral methods, we applied the Rayleigh periodogram — a point-process spectral test that measures phase alignment of event timestamps at candidate periods — to all five validated scheduling families plus prime and polynomial schedules for completeness (n = 20–50 events per family), with periodic beacons as positive controls and Poisson random arrivals as a negative control.
 
 **Positive controls passed:** All three periodic beacons (30s interval at 0%, 10%, and 25% jitter) were detected at their correct periods with FAP < 0.01. The Poisson negative control was not significant (FAP = 0.29). The test is correctly calibrated.
 
@@ -667,7 +615,7 @@ The prime, polynomial, and bounded rotation families did not produce significant
 
 ### 8.10 Multi-Method Detection Comparison
 
-To assess whether the detection gap extends beyond RITA-style composite scoring, we applied four periodicity-centric detection methods to all five scheduling families across five jitter levels (0%, 5%, 10%, 15%, 20%), with a periodic beacon as a positive control (test_multimethod.py, reproducible):
+To assess whether the detection gap extends beyond RITA-style composite scoring, we applied four periodicity-centric detection methods to all five scheduling families across five jitter levels (0%, 5%, 10%, 15%, 20%), with a periodic beacon as a positive control (run_all_tests.py test 6, reproducible):
 
 **Methods tested:**
 - **RITA-style composite score** — four-component equal-weight scoring (alert threshold: ≥ 0.70)
@@ -765,37 +713,54 @@ The structural ceiling is proved for RITA-style composite scoring with four equa
 
 ### 11.3 Scope of the Enumeration
 
-Within the class of binary-coefficient linear recurrences up to third order, the four cubics plus the Fibonacci quadratic cover all non-degenerate possibilities. The prime and polynomial families represent two representative non-recurrence growth classes. The bounded paradigm represents one non-growth case. The reverse extension covers the directional dimension.
+Within the class of binary-coefficient linear recurrences up to third order, the four cubics plus the Fibonacci quadratic cover all non-degenerate possibilities. The bounded paradigm represents the non-growth case. The reverse extension covers the directional dimension.
 
 What remains outside this taxonomy: van der Corput and Halton sequences (base-reversal quasi-random rather than rotation-based) may carry different structural fingerprints than irrational rotation. Fourth-order and higher recurrences (e.g., Tetranacci) are natural extensions but produce diminishing marginal coverage — their growth ratios cluster near 2.0, making them harder to distinguish from exponential backoff. Non-linear deterministic sequences, chaotic maps, and hybrid strategies are not addressed.
 
-### 11.4 What Failed and Why
+### 11.4 Detector Maturity
 
-Two detection paths failed at scale. Understanding why they failed may be more valuable than the detectors that succeeded, because the failure reveals a general principle about detection signal quality.
+The Bounded Hunter occupies a middle ground. The three-gap theorem provides a mathematically rigorous detection signal — a relational test (gap-count clustering) rather than a value-based one — and it produced only 3 activations across 101K flows. However, its jitter tolerance (~1–2%) is an order of magnitude below the recurrence detectors (78% detection rate at 10% jitter; see Section 8.7). Rotation-parameter estimation, which would recover the irrational α directly from the interval sequence, is a more promising but substantially harder approach. The Bounded Hunter should be understood as a proof of concept demonstrating that bounded non-periodic scheduling is detectable in principle.
 
-**Prime detection failed because it tests values, not relationships.** The prime detector asks: "Is this interval value near a prime number?" That is a property of the individual interval, independent of its neighbors. Because primes have density ~1/ln(n), approximately one in eight integers near typical C2-range values is prime. Any sufficiently long flow has a reasonable chance of containing intervals near primes by coincidence. In CTU-13 testing, 98% of all structural false positives — 41,225 out of 42,184 — originated from this path. All 146 structural activations on labeled botnet flows were prime misclassifications: periodic C2 at intervals that happened to be near prime values (e.g., 2369 seconds, which is coincidentally prime).
+### 11.5 How to Deploy
 
-**Polynomial detection failed for the same structural reason.** Log-log linearity tests the shape of the sequence as a whole, not the generative relationship between consecutive terms. Many natural processes produce curves that appear linear on a log-log plot over short windows.
+The framework requires only `numpy` and `scipy` (plus `dpkt` for PCAP input). No GPU, no training data, no model weights.
 
-**Recurrence detection succeeded because it tests relationships.** The recurrence detectors ask: "Does ICI[n] ≈ ICI[n-1] + ICI[n-2]?" That is a constraint on how consecutive intervals relate to each other. Random traffic almost never satisfies it — the probability of three consecutive intervals accidentally forming an additive relationship with low residual is negligible, and the probability of ten consecutive intervals doing so is astronomically small. This is why the four recurrence detectors produced only 22 activations across 145,406 flows.
+**Step 1 — Install and verify.**
 
-**The general principle: relational signals discriminate; value-based signals do not.** This distinction — testing inter-element structure versus testing individual-element properties — may apply beyond the specific families studied here. Any detection method that tests what values are (near primes, near powers, near specific constants) will struggle with coincidental matches. Methods that test how values relate to each other (recurrence, convergence, structural dependency) are inherently more selective.
+```bash
+pip install numpy scipy dpkt
+cd recurrence-detection-framework
+python demo.py              # verify: 5/5 detected, 0 FP
+python demo.py --negative   # verify: 0/25 flags on benign patterns
+```
 
-### 11.5 Detector Maturity
+**Step 2 — Run against Zeek conn.log.**
 
-The Bounded Hunter occupies a middle ground. The three-gap theorem provides a mathematically rigorous detection signal — a relational test (gap-count clustering) rather than a value-based one — and it produced only 3 activations across 145K flows. However, its jitter tolerance (~1–2%) is an order of magnitude below the recurrence detectors (78% detection rate at 10% jitter; see Section 8.7). Rotation-parameter estimation, which would recover the irrational α directly from the interval sequence, is a more promising but substantially harder approach. The Bounded Hunter should be understood as a proof of concept demonstrating that bounded non-periodic scheduling is detectable in principle.
+Each detector is a pure function that takes a list of timestamps and returns a classification dict:
 
-### 11.6 Comparison to Machine Learning
+```python
+from detectors.beacon_hunter.detectors import classify_flow
 
-ML-based beacon detectors [13–17] and structural detectors address different aspects of the detection problem. ML approaches learn statistical patterns from labeled data and generalize to unseen variants within the training distribution. Structural detectors test specific mathematical relationships and provide interpretable, family-specific classification. The approaches are complementary: structural classifications can serve as features for ML-based scoring, and ML can handle scheduling families that don't fit any known mathematical model.
+result = classify_flow(timestamps, connection_level=True, min_pkts=7)
+if result["classification"] == "ADDITIVE_RECURRENCE_BEACON":
+    print(f"Fibonacci beacon detected: {result['confidence']:.0%}")
+```
 
-### 11.7 Operational Deployment Considerations
+For batch analysis of a Zeek conn.log, group connections by (src, dst, dport), extract sorted timestamps per flow, and call each detector on flows with 8+ connections.
 
-These tools are designed as supplemental signals within multi-tool triage workflows, not as standalone detection systems. A classification of ADDITIVE_RECURRENCE_BEACON or ROTATION_BEACON identifies timing structure consistent with a mathematical family; it does not assert compromise. Analysts should apply destination reputation, FQDN, port, protocol, host role, and volume context. High-confidence flags on non-multicast TCP destinations to external IPs warrant investigation; marginal flags on known-protocol broadcast traffic are dismissed.
+**Step 3 — Integrate into existing pipeline.**
 
-Deployment requires integration into an existing SIEM or Zeek pipeline. Each detector processes one flow at a time; the computational cost is dominated by the Gate 2 permutation test (200–500 iterations). For a 24-hour Zeek conn.log with ~2,000 qualifying flows, the full six-detector battery completes in under 30 seconds on commodity hardware. At enterprise scale (100K+ flows), parallelization across flows is straightforward because detectors are stateless.
+The detectors are stateless and process one flow at a time. Integration points:
 
-False-positive triage is the primary operational concern. The backoff stress test (Section 8.6) identified gRPC 1.6× multiplier traffic as the highest-risk confounder. Environments with heavy gRPC usage should monitor Gate 2.5 rejection rates; consistently high rejection rates may indicate the convergence slope threshold (−0.008) needs tuning for the local traffic profile. The remaining ~46/3200 (1.4%) flag rate on synthetic stress patterns represents an upper bound — real-world retry sequences are typically shorter (3–5 retries, below the minimum-interval threshold) and embedded in longer flows with non-geometric surrounding traffic.
+- **Zeek script / Zeek package:** Call the Python detectors from a Zeek `conn_log` post-processor on a cron or at log rotation.
+- **SIEM enrichment:** Run the detector battery as a scheduled job against exported connection metadata. Flag results above 50% confidence for analyst review.
+- **Alongside RITA:** Run both tools on the same conn.log. RITA catches periodic and jittered beacons; the structural detectors catch what RITA provably cannot.
+
+**Performance.** The full six-detector battery completes in under 30 seconds on a 24-hour Zeek conn.log (~2,000 qualifying flows) on commodity hardware. At enterprise scale (100K+ flows), parallelization across flows is straightforward because detectors are stateless.
+
+**Triage.** A structural classification identifies timing structure consistent with a mathematical family — it does not assert compromise. Analysts should apply destination reputation, FQDN, port, protocol, host role, and volume context. High-confidence flags on non-multicast TCP destinations to external IPs warrant investigation; marginal flags on known-protocol broadcast traffic (IPv6 NDP, mDNS) are dismissed. Environments with heavy gRPC usage should monitor Gate 2.5 rejection rates — gRPC's 1.6x multiplier is near phi and is the highest-risk confounder.
+
+**Ground-truth validation.** To confirm the detectors work in your environment, use the included `tools/fib_beacon_client.py` and `tools/fib_beacon_server.py` to generate a controlled Fibonacci beacon while capturing with Wireshark on loopback. See VALIDATION.md for the full procedure.
 
 ---
 
@@ -805,9 +770,9 @@ The following limitations constrain the strength of the current results and shou
 
 **No observed malware adoption.** No confirmed real-world malware sample is known to use Fibonacci, Tribonacci, Padovan, Narayana, or irrational rotation scheduling. The framework addresses a plausible future threat based on operational incentives analysis, not a confirmed current one. The threat model's value depends on whether these scheduling strategies are eventually adopted by adversaries, which remains unknown.
 
-**Enterprise validation limited to one environment.** The primary enterprise Zeek dataset spans 24 hours from a single network with 204 qualifying flows. The CTU-13 dataset (251,459 flows) provides larger-scale FPR characterization but dates from 2011 and represents university network traffic, not contemporary enterprise environments. Multi-site, multi-week validation across diverse network types is needed.
+**Enterprise validation limited to one environment.** The primary enterprise Zeek dataset spans 24 hours from a single network with 204 qualifying flows. The CTU-13 dataset (101,472 qualifying flows at n >= 8) provides larger-scale FPR characterization but dates from 2011 and represents university network traffic, not contemporary enterprise environments. Multi-site, multi-week validation across diverse network types is needed.
 
-**Prime and polynomial detectors not operationally validated.** The prime and polynomial detection paths produced 98% of all structural false positives in CTU-13 testing and were removed from the validated core. These growth regimes are part of the taxonomy but do not have validated detection methods. Developing relational (rather than value-based) detection signals for logarithmic and polynomial growth remains an open research problem.
+**Logarithmic and polynomial growth regimes not covered.** Detectors for prime-spaced and polynomial-growth scheduling were tested during development but produced unacceptable false-positive rates (98% of all FP in CTU-13 originated from value-based prime-adjacency tests). These growth regimes are theoretically plausible for adversarial scheduling but lack validated relational detection methods.
 
 **Spectral findings preliminary.** The Rayleigh periodogram analysis uses synthetic schedules at fixed sequence lengths (n = 20–50) with a single spectral method. Longer sequences, alternative methods (Lomb-Scargle, autocovariance), sensitivity analysis, and real-traffic spectral testing are needed before spectral-observability claims can be considered robust.
 
@@ -827,8 +792,6 @@ The following limitations constrain the strength of the current results and shou
 
 Several directions extend the current framework.
 
-**Logarithmic and polynomial growth-regime detection.** The taxonomy identifies four growth regimes, but the current validated detectors cover only two (exponential and bounded). The logarithmic regime (exemplified by prime-spaced intervals) and polynomial regime (power-law growth) lack validated detection methods. CTU-13 testing demonstrated that value-based approaches — testing whether individual intervals are near primes, or whether the sequence shape fits a power law — produce unacceptable false-positive rates (98% of all structural FP). Future work should investigate relational detection signals for these regimes: methods that test structural relationships between consecutive intervals rather than properties of individual interval values. Whether such relational signals exist for logarithmic and polynomial growth is an open question.
-
 **Higher-order recurrences.** Fourth-order (Tetranacci) and higher recurrences are natural extensions. However, their growth ratios cluster near 2.0 as order increases, making them harder to distinguish from common exponential backoff patterns. The diminishing separation from geometric growth at r = 2.0 is a fundamental limitation, not a tunable parameter.
 
 **Non-linear deterministic sequences.** Chaotic maps (logistic, tent), quasi-random constructions (van der Corput, Halton), and hybrid strategies remain outside the current taxonomy. These may carry different structural fingerprints than the growth-regime families addressed here.
@@ -847,25 +810,21 @@ Several directions extend the current framework.
 
 The following table summarizes the status of each scheduling family in the framework:
 
-| Family | Growth Regime | Signal Type | Detector Status | CTU-13 Result |
-|--------|--------------|-------------|----------------|---------------|
-| Fibonacci | Exponential | Relational | Validated | 1 activation / 145K flows |
-| Tribonacci | Exponential | Relational | Validated | 0 activations / 145K flows |
-| Padovan | Exponential | Relational | Validated | 9 activations / 145K flows |
-| Narayana | Exponential | Relational | Validated | 9 activations / 145K flows |
-| Rotation | Bounded | Relational | Validated | 3 activations / 145K flows |
-| Prime | Logarithmic | Value-based | Failed at scale | 41,225 activations / 251K flows |
-| Polynomial | Power-law | Value-based | Failed at scale | 141 activations / 251K flows |
+| Family | Growth Regime | Algebraic Constant | CTU-13 Result |
+|--------|--------------|-------------------|---------------|
+| Fibonacci | Exponential | phi = 1.618 | 1 activation / 101K flows |
+| Tribonacci | Exponential | tau = 1.839 | 0 activations / 101K flows |
+| Padovan | Exponential | rho = 1.325 | 7 activations / 101K flows |
+| Narayana | Exponential | N = 1.466 | 7 activations / 101K flows |
+| Rotation | Bounded | (three-gap) | 3 activations / 101K flows |
 
-*Table 14. Framework summary. Relational detectors (testing inter-interval structure) survived large-scale validation. Value-based detectors (testing individual interval properties) did not.*
+*Table 14. Framework summary. All detectors test inter-interval structure (relational signals). 18 total activations across 101,472 labeled background flows (0.0035% classification FPR).*
 
 ### Practical Takeaways
 
 **What the ceiling theorem means.** Any C2 beacon that uses monotonically growing intervals — regardless of the specific mathematical family — will score below the RITA alert threshold for n ≥ 3 distinct intervals. This is a structural property of the scoring methodology, not a tuning gap. RITA v5.1.2 scored a 20-connection Fibonacci beacon at 45.9% (Severity: None), consistent with the theoretical ceiling of 52.5%.
 
-**What detectors work.** The four recurrence detectors (Fibonacci, Tribonacci, Padovan, Narayana) and the bounded rotation detector produce 22 structural activations across 145,406 real labeled background flows — fewer than two per dataset. These detectors test structural relationships between consecutive intervals: a signal that benign traffic almost never produces by coincidence.
-
-**What detectors failed.** The prime and polynomial detectors test individual interval values rather than inter-interval relationships. This signal type is insufficiently discriminative: 98% of all structural false positives in CTU-13 validation originated from the prime path. These growth regimes remain part of the taxonomy as open detection problems.
+**What detectors work.** The four recurrence detectors (Fibonacci, Tribonacci, Padovan, Narayana) and the bounded rotation detector produce 18 structural activations across 101,472 real labeled background flows — fewer than two per scenario. These detectors test structural relationships between consecutive intervals: a signal that benign traffic almost never produces by coincidence.
 
 **What defenders should do today.** The recurrence and rotation detectors are designed as supplemental signals within existing triage workflows, not as standalone alerting systems. A structural classification identifies timing structure consistent with a mathematical family; contextual triage — destination reputation, protocol, port, host role — determines whether the traffic warrants investigation. The framework extends detection coverage into a region of timing signal space where RITA-style composite scoring is provably unable to alert.
 
@@ -875,13 +834,13 @@ The following table summarizes the status of each scheduling family in the frame
 
 A beacon does not need to be periodic to be structured. We have shown that RITA-style composite regularity scoring has a structural ceiling for monotonically growing schedules: for n ≥ 3 distinct intervals, the maximum composite score is bounded by 0.50 + 0.50/n, strictly below the 0.70 alert threshold. This ceiling is a mathematical property of the scoring methodology, not a tuning deficiency, and it applies to any monotonically growing deterministic schedule regardless of the specific mathematical family.
 
-We have presented a structural taxonomy of seven scheduling families organized by growth regime — bounded, logarithmic, polynomial, and exponential — with a closed algebraic enumeration of the binary-coefficient recurrence class up to third order (Fibonacci, Tribonacci, Padovan, Narayana). The three-gap theorem, applied — to our knowledge for the first time — to network security detection, provides a detection signal for bounded non-periodic scheduling that is qualitatively distinct from growth-based detection.
+We have presented a structural taxonomy of five validated scheduling families — four algebraic recurrences (Fibonacci, Tribonacci, Padovan, Narayana) and bounded irrational rotation — with a closed algebraic enumeration of the binary-coefficient recurrence class up to third order. The three-gap theorem, applied — to our knowledge for the first time — to network security detection, provides a detection signal for bounded non-periodic scheduling that is qualitatively distinct from growth-based detection.
 
-Large-scale validation on the CTU-13 and Stratosphere datasets (145,406 labeled background flows, over 742,000 detector evaluations at n ≥ 8) showed that the validated recurrence and bounded detectors produced only 22 structural activations on background traffic — fewer than two per dataset. This low activation rate on a large benign corpus, combined with zero activations on 3,165 labeled botnet flows, demonstrates that recurrence structures are uncommon in real network traffic and that the detectors do not produce spurious matches on conventional C2 timing patterns. Early evaluation of value-based detection paths (prime-adjacency, polynomial curve-fitting) revealed that relational signals — testing structural relationships between consecutive intervals — are fundamentally more discriminative than value-based signals testing properties of individual interval values. This finding led to the exclusion of the logarithmic and polynomial growth regimes from the validated core; detection methods for these regimes remain an open research problem.
+Large-scale validation on the CTU-13 dataset (101,472 labeled background flows, 520,040 detector evaluations at n >= 8) showed that the validated recurrence and bounded detectors produced only 18 structural activations on background traffic — fewer than two per scenario. This low activation rate on a large benign corpus, combined with zero activations on 2,536 labeled botnet flows, demonstrates that recurrence structures are uncommon in real network traffic and that the detectors do not produce spurious matches on conventional C2 timing patterns.
 
 Systematic backoff stress testing confirmed that the four most common retry patterns (binary, AWS SDK, Kubernetes, TCP retransmission) produce zero false positives across all detectors. The introduction of Gate 2.5 (convergence-based geometric-backoff rejection) reduced total backoff flags from 179 to 46, with the gRPC 1.6× multiplier pattern — mathematically near-identical to the golden ratio — dropping from 128 to 13 flags. Rayleigh periodogram analysis showed family-dependent spectral observability: recurrence families produce significant peaks reflecting non-stationarity rather than behavioral periodicity, while prime, polynomial, and rotation families do not produce significant peaks.
 
-The validated core of the framework — Beacon Hunter (Fibonacci), Tribonacci Hunter, Padovan Hunter, Narayana Hunter, Bounded Hunter (rotation), and Reverse Scanner v1.2 (four recurrence families, bidirectional) — demonstrates that structural detection of deterministic non-periodic scheduling is feasible for the algebraic recurrence class, with low activation rates on large real-world benign traffic corpora. The logarithmic and polynomial growth regimes remain theoretically valid regions of the taxonomy where reliable detection is an open research problem. Multi-site operational validation and demonstration that recurrence-scheduled beacons evade traditional detection while being recovered by this framework are the most important next steps toward operational deployment.
+The validated core of the framework — Beacon Hunter (Fibonacci), Tribonacci Hunter, Padovan Hunter, Narayana Hunter, Bounded Hunter (rotation), and Reverse Scanner v1.2 (four recurrence families, bidirectional) — demonstrates that structural detection of deterministic non-periodic scheduling is feasible for the algebraic recurrence class, with low activation rates on large real-world benign traffic corpora. Multi-site operational validation and demonstration that recurrence-scheduled beacons evade traditional detection while being recovered by this framework are the most important next steps toward operational deployment.
 
 ---
 
@@ -961,20 +920,18 @@ The validated core of the framework — Beacon Hunter (Fibonacci), Tribonacci Hu
 
 The following supplementary materials are available in the accompanying code repository:
 
-- **Ceiling proof extension:** generalized proof covering bucket collisions and near-monotonic schedules (extends Cordero [27], Appendix A).
-- **Jitter sweep data:** tabulated detection rates for all tools at 0%–30% multiplicative jitter.
-- **Boundary sweep data:** Gate 1 acceptance window characterization across geometric ratios 1.20–3.00.
-- **Cross-family residual derivations:** theoretical residual formulas for all family pairs.
-- **Full classification matrix:** every detection target tested against every detector (13 schedules × 8 tools).
-- **Backoff test battery:** script testing eight real-world retry patterns against all detectors.
-- **Spectral comparison:** Lomb-Scargle and autocorrelation analysis script for all scheduling families.
-- **All detector source code:** AGPL-3.0 licensed, with validation suites and real Zeek test data.
+- **All detector source code:** `detectors/` — six detector modules, AGPL-3.0 licensed.
+- **Full evidence-hardening test suite:** `run_all_tests.py` — all tests in one run (~4 minutes).
+- **Individual validation scripts:** `validation/` — standalone tests for ceiling proof, injection, n-sensitivity, jitter tolerance, backoff stress, spectral comparison, and CTU-13 validation.
+- **Ground-truth generation tools:** `tools/` — Fibonacci beacon client/server for controlled PCAP captures, Zeek conn.log injection, dataset download scripts.
+- **Captured results:** `results/` — evidence suite JSON, PCAP analysis reports, RITA v5.1.2 comparison output.
+- **Validation procedure:** `VALIDATION.md` — step-by-step ground-truth capture and detection walkthrough.
 
 ---
 
 ## Figure Inventory
 
-All 16 figures are generated and embedded in this manuscript.
+Figures referenced in this manuscript:
 
 | # | Title | Type | Section |
 |---|-------|------|---------|

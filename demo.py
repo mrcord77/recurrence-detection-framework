@@ -98,7 +98,7 @@ def narayana_schedule(n=20, base=5.0, jitter=0.10, seed=42):
     return list(np.concatenate([[0.0], np.cumsum(intervals)]))
 
 def rotation_schedule(n=30, base_min=30.0, base_max=120.0, alpha=None, seed=42):
-    """Bounded irrational rotation: ICI = min + (max-min) * frac(n*α)."""
+    """Bounded irrational rotation: ICI = min + (max-min) * frac(n*alpha)."""
     if alpha is None:
         alpha = (1 + np.sqrt(5)) / 2  # golden ratio
     intervals = []
@@ -370,12 +370,12 @@ def run_negative_demo():
                 cls = r.get("classification", "UNKNOWN")
                 if cls in ("BACKGROUND", "INSUFFICIENT_DATA", "UNKNOWN") or \
                    "REGULAR_BEACON" in cls or "JITTERED_BEACON" in cls:
-                    row_results.append("✓")
+                    row_results.append("Y")
                 else:
-                    row_results.append("✗")
+                    row_results.append("x")
                     row_flags += 1
                     total_flags += 1
-            except:
+            except Exception:
                 row_results.append("—")
 
         status = "CLEAN" if row_flags == 0 else f"{row_flags} FLAG"
@@ -389,9 +389,9 @@ def run_negative_demo():
     print(f"  Total: {total_flags}/{total_tests} flags")
 
     if total_flags == 0:
-        print("  ✓ All benign patterns correctly rejected by all detectors.")
+        print("  [PASS] All benign patterns correctly rejected by all detectors.")
     else:
-        print(f"  ⚠ {total_flags} pattern(s) produced structural activations.")
+        print(f"  [WARN] {total_flags} pattern(s) produced structural activations.")
     print()
     print("=" * 70)
     print()
@@ -482,9 +482,8 @@ def run_demo(families=None, generate_zeek=False):
         det_str = r['det_class'][:30]
         conf_str = f"{r['det_conf']*100:.1f}%" if r['detected'] else "—"
 
-        # Color indicators
-        rita_mark = "✗" if not r['rita_alert'] else "✓"
-        det_mark = "✓" if r['detected'] else "✗"
+        rita_mark = "x" if not r['rita_alert'] else "Y"
+        det_mark = "Y" if r['detected'] else "x"
 
         print(f"  {r['family']:<14} {r['n']:>3}  {rita_mark} {rita_str:>8} {ceil_str:>8} {alert_str:>7}  {det_mark} {det_str:<28} {conf_str:>6}")
 
@@ -500,13 +499,13 @@ def run_demo(families=None, generate_zeek=False):
     print()
 
     if n_missed_by_rita > 0 and n_caught_by_detector > 0:
-        print("  ✓ RESULT CONSISTENT WITH DETECTION-GAP HYPOTHESIS")
+        print("  [PASS] RESULT CONSISTENT WITH DETECTION-GAP HYPOTHESIS")
         print("    Under the evaluated conditions, schedules that RITA-style")
         print("    scoring cannot alert on are identified by structural")
         print("    recurrence analysis.")
         print()
         print("  The ceiling theorem predicts this result:")
-        print("    For n ≥ 3 distinct intervals, RITA's composite score")
+        print("    For n >= 3 distinct intervals, RITA's composite score")
         print("    is bounded by 0.50 + 0.50/n, strictly below 0.70.")
         print()
 

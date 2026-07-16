@@ -25,7 +25,7 @@ import importlib
 import numpy as np
 from scipy import stats as scipy_stats
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 bh = importlib.import_module("detectors.beacon_hunter.detectors")
 

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-spectral_comparison.py (v2 — fixed)
+spectral_comparison.py (v2 -- fixed)
 ------------------------------------
 Tests whether non-periodic structured schedules produce detectable spectral
 peaks using point-process periodogram analysis.
 
 FIXES from v1:
   - v1 applied Lomb-Scargle to mean-centered ICIs indexed by connection number.
-    A perfect periodic beacon has constant ICIs → mean-centering gives zeros → NaN.
+    A perfect periodic beacon has constant ICIs -> mean-centering gives zeros -> NaN.
     The positive control FAILED, invalidating all results.
   - v2 uses the Rayleigh/Schuster periodogram, which is the correct spectral
     test for point processes (event timestamps). For each candidate period P,
-    it computes how well events phase-align: R = |mean(exp(2πi·t/P))|².
-    Periodic events cluster at a specific phase → high R.
-    Non-periodic events scatter uniformly → low R.
+    it computes how well events phase-align: R = |mean(exp(2*pi*i*t/P))|^2.
+    Periodic events cluster at a specific phase -> high R.
+    Non-periodic events scatter uniformly -> low R.
 
 DEPENDENCIES:
   pip install numpy scipy
@@ -140,7 +140,7 @@ def analyze_spectral(timestamps, label=""):
 
     # Period search range: from min_ICI to a reasonable behavioral maximum
     # Using min_ICI avoids sub-ICI harmonic artifacts.
-    # Capping at max_ICI × 5 or T/4 avoids non-stationarity artifacts where
+    # Capping at max_ICI x 5 or T/4 avoids non-stationarity artifacts where
     # the Rayleigh test detects event-density clustering at observation-scale
     # periods rather than true periodicity.
     min_period = min_ici * 0.9
@@ -246,33 +246,33 @@ def analyze_autocorrelation(timestamps, label=""):
 
 if __name__ == "__main__":
     print("=" * 75)
-    print("  SPECTRAL & AUTOCORRELATION ANALYSIS (v2 — Rayleigh periodogram)")
+    print("  SPECTRAL & AUTOCORRELATION ANALYSIS (v2 -- Rayleigh periodogram)")
     print("  Testing whether non-periodic schedules produce detectable signals")
     print("=" * 75)
     print()
 
     schedules = [
-        # Positive controls — MUST show significant peaks or the test is broken
+        # Positive controls -- MUST show significant peaks or the test is broken
         ("Periodic 30s (no jitter)",     periodic_times(50, 30.0, 0.0)),
         ("Periodic 30s (10% jitter)",    periodic_times(50, 30.0, 0.10)),
         ("Periodic 30s (25% jitter)",    periodic_times(50, 30.0, 0.25)),
 
-        # Negative control — should show NO peaks
-        ("Poisson random (λ=60s)",       poisson_times(50, 60.0)),
+        # Negative control -- should show NO peaks
+        ("Poisson random (lambda=60s)",  poisson_times(50, 60.0)),
 
         # Non-periodic families (the test subjects)
-        ("Fibonacci (φ≈1.618)",          fibonacci_times(30)),
-        ("Tribonacci (τ≈1.839)",         tribonacci_times(20)),
-        ("Padovan (ρ≈1.325)",            padovan_times(30)),
-        ("Narayana (N≈1.466)",           narayana_times(30)),
+        ("Fibonacci (phi~1.618)",        fibonacci_times(30)),
+        ("Tribonacci (tau~1.839)",       tribonacci_times(20)),
+        ("Padovan (rho~1.325)",          padovan_times(30)),
+        ("Narayana (N~1.466)",           narayana_times(30)),
         ("Primes (PNT)",                 prime_times(25)),
-        ("Polynomial (n²)",              polynomial_times(30)),
-        ("Rotation (φ, 30-120s)",        rotation_times(50)),
+        ("Polynomial (n^2)",             polynomial_times(30)),
+        ("Rotation (phi, 30-120s)",      rotation_times(50)),
     ]
 
-    print("─" * 75)
-    print(f"{'Schedule':<32} {'Peak R':>8} {'Peak Period':>12} {'FAP':>10} {'Sig?':>6} {'ΔAC':>8} {'AC?':>5}")
-    print("─" * 75)
+    print("-" * 75)
+    print(f"{'Schedule':<32} {'Peak R':>8} {'Peak Period':>12} {'FAP':>10} {'Sig?':>6} {'dAC':>8} {'AC?':>5}")
+    print("-" * 75)
 
     periodic_detected = 0
     nonperiodic_missed = 0
@@ -305,21 +305,21 @@ if __name__ == "__main__":
             if not spec["significant_010"]:
                 nonperiodic_missed += 1
 
-    print("─" * 75)
+    print("-" * 75)
     print()
 
     # Validate positive controls first
     print("VALIDATION:")
     print()
     if periodic_detected >= 2:
-        print(f"  ✓ Positive control PASSED: {periodic_detected}/{n_periodic} periodic beacons detected (FAP < 0.01)")
+        print(f"  + Positive control PASSED: {periodic_detected}/{n_periodic} periodic beacons detected (FAP < 0.01)")
         print(f"    The test is correctly calibrated.")
     elif periodic_detected >= 1:
         print(f"  ~ Positive control PARTIAL: {periodic_detected}/{n_periodic} periodic beacons detected")
-        print(f"    Some periodic controls missed — interpret non-periodic results with caution.")
+        print(f"    Some periodic controls missed -- interpret non-periodic results with caution.")
     else:
-        print(f"  ✗ Positive control FAILED: {periodic_detected}/{n_periodic} periodic beacons detected")
-        print(f"    TEST IS INVALID — do not use these results.")
+        print(f"  X Positive control FAILED: {periodic_detected}/{n_periodic} periodic beacons detected")
+        print(f"    TEST IS INVALID -- do not use these results.")
         print(f"    The spectral method cannot detect even periodic beacons at this sequence length.")
         sys.exit(1)
 
@@ -327,15 +327,15 @@ if __name__ == "__main__":
     print("RESULTS:")
     print()
     if nonperiodic_missed == n_nonperiodic:
-        print(f"  ✓ Non-periodic families: {nonperiodic_missed}/{n_nonperiodic} show NO significant peak")
-        print(f"    → Rayleigh periodogram does not detect these scheduling families")
-        print(f"    → The detection gap extends beyond RITA-style scoring to spectral methods")
+        print(f"  + Non-periodic families: {nonperiodic_missed}/{n_nonperiodic} show NO significant peak")
+        print(f"    -> Rayleigh periodogram does not detect these scheduling families")
+        print(f"    -> The detection gap extends beyond RITA-style scoring to spectral methods")
     elif nonperiodic_missed > 0:
         detected = n_nonperiodic - nonperiodic_missed
         print(f"  ~ Non-periodic families: {nonperiodic_missed}/{n_nonperiodic} show no significant peak")
-        print(f"    → {detected} families DO produce spectral peaks — investigate before claiming spectral evasion")
+        print(f"    -> {detected} families DO produce spectral peaks -- investigate before claiming spectral evasion")
     else:
-        print(f"  ✗ Non-periodic families: all show significant peaks")
-        print(f"    → The spectral blind spot does NOT exist — these schedules ARE spectrally detectable")
+        print(f"  X Non-periodic families: all show significant peaks")
+        print(f"    -> The spectral blind spot does NOT exist -- these schedules ARE spectrally detectable")
 
     print()

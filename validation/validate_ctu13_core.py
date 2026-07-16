@@ -3,13 +3,13 @@
 validate_ctu13_n8_core.py
 -------------------------
 OPTION A: Individual recurrence detectors + Bounded (no Reverse Scanner).
-Forward detection only. n≥8 minimum window.
+Forward detection only. n>=8 minimum window.
 """
 
 import os
 import sys
 import csv
-import importlib.util
+import importlib
 import time
 from datetime import datetime
 from collections import defaultdict
@@ -18,16 +18,19 @@ from collections import defaultdict
 # CONFIGURATION
 # ============================================================
 
-CTU13_DIR = os.path.expanduser("~/beacon_validation_data/CTU-13-Dataset")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO_ROOT)
+
+CTU13_DIR = os.path.expanduser("~/beacon_validation_data/CTU-13-Dataset/CTU-13-Dataset")
 STRATOSPHERE_DIR = os.path.expanduser("~/beacon_validation_data/stratosphere")
 
-# Detector paths (adjust to match your folder names)
-DETECTOR_PATHS = [
-    ("Beacon Hunter",     "./beacon_hunter_v0_3_0"),
-    ("Tribonacci Hunter", "./tribonacci_hunter_v1_1"),
-    ("Padovan Hunter",    "./padovan_hunter_v1_1"),
-    ("Narayana Hunter",   "./narayana_hunter_v1_1"),
-    ("Bounded Hunter",    "./bounded_hunter_v1_0"),
+# Detector folders under detectors/
+DETECTOR_FOLDERS = [
+    ("Beacon Hunter",     "beacon_hunter"),
+    ("Tribonacci Hunter", "tribonacci_hunter"),
+    ("Padovan Hunter",    "padovan_hunter"),
+    ("Narayana Hunter",   "narayana_hunter"),
+    ("Bounded Hunter",    "bounded_hunter"),
 ]
 
 MIN_TIMESTAMPS = 8  # Minimum connections per flow to test (raised from 6)
@@ -96,30 +99,13 @@ def parse_binetflow(filepath):
 def load_detectors():
     """Load all detectors, return list of (name, module)."""
     detectors = []
-    for name, path in DETECTOR_PATHS:
-        full_path = os.path.abspath(os.path.join(os.path.dirname(__file__) or '.', path))
-        spec_path = os.path.join(full_path, "detectors.py")
-        if not os.path.exists(spec_path):
-            print(f"  ✗ {name}: not found at {spec_path}")
-            continue
-
-        safe_name = name.replace(" ", "_").replace(".", "_").lower()
-        module_name = f"detector__{safe_name}"
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-
-        spec = importlib.util.spec_from_file_location(module_name, spec_path)
-        mod = importlib.util.module_from_spec(spec)
-        sys.path.insert(0, full_path)
+    for name, folder in DETECTOR_FOLDERS:
         try:
-            spec.loader.exec_module(mod)
+            mod = importlib.import_module(f"detectors.{folder}.detectors")
             detectors.append((name, mod))
-            print(f"  ✓ Loaded {name}")
+            print(f"  [OK] Loaded {name}")
         except Exception as e:
-            print(f"  ✗ {name}: {e}")
-        finally:
-            if full_path in sys.path:
-                sys.path.remove(full_path)
+            print(f"  [FAIL] {name}: {e}")
     return detectors
 
 
@@ -153,7 +139,7 @@ if __name__ == "__main__":
     # Load detectors
     detectors = load_detectors()
     if not detectors:
-        print("No detectors loaded. Check DETECTOR_PATHS.")
+        print("No detectors loaded. Check DETECTOR_FOLDERS.")
         sys.exit(1)
     print()
 
@@ -170,7 +156,7 @@ if __name__ == "__main__":
                 if fname.endswith(".binetflow"):
                     binetflow_files.append((f"CTU13-{scenario}", os.path.join(scenario_dir, fname)))
     else:
-        print(f"  ⚠ CTU-13 not found at {CTU13_DIR}")
+        print(f"  [WARN] CTU-13 not found at {CTU13_DIR}")
 
     # Stratosphere captures
     if os.path.isdir(STRATOSPHERE_DIR):
@@ -178,7 +164,7 @@ if __name__ == "__main__":
             if fname.endswith(".binetflow"):
                 binetflow_files.append((f"Strat-{fname[:10]}", os.path.join(STRATOSPHERE_DIR, fname)))
     else:
-        print(f"  ⚠ Stratosphere not found at {STRATOSPHERE_DIR}")
+        print(f"  [WARN] Stratosphere not found at {STRATOSPHERE_DIR}")
 
     if not binetflow_files:
         print("No binetflow files found.")
@@ -310,9 +296,9 @@ if __name__ == "__main__":
         print()
 
     if total_structural_fp == 0:
-        print("  ✓ ZERO structural false positives on real labeled background traffic.")
+        print("  [PASS] ZERO structural false positives on real labeled background traffic.")
         print("  This result can be added to the paper.")
     else:
-        print(f"  ⚠ {total_structural_fp} structural false positive(s) on background traffic.")
+        print(f"  [WARN] {total_structural_fp} structural false positive(s) on background traffic.")
         print("  Investigate before adding to the paper.")
     print()

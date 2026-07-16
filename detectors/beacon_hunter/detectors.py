@@ -161,7 +161,7 @@ def variance_growth_test(iats, n_windows=5):
     return {"slope": norm_slope, "r_sq": r_sq, "label": label, "beacon_score": score}
 
 
-def ratio_test(conn_times, phi_tol=0.2, min_ratio=1.3, max_ratio_cv=0.5):
+def ratio_test(conn_times, phi_tol=0.12, min_ratio=1.45, max_ratio_cv=0.35):
     """
     Connection-level inter-connection interval (ICI) ratio test.
 
@@ -197,9 +197,9 @@ def ratio_test(conn_times, phi_tol=0.2, min_ratio=1.3, max_ratio_cv=0.5):
     Parameters
     ----------
     conn_times   : array-like  (connection event timestamps, one per session)
-    phi_tol      : float  (max |r_bar - phi| for Fibonacci flag, default 0.2)
-    min_ratio    : float  (min r_bar; rules out regular beacons near 1.0)
-    max_ratio_cv : float  (max CV of ratios; filters noisy random clusters)
+    phi_tol      : float  (max |r_bar - phi| for Fibonacci flag, default 0.12)
+    min_ratio    : float  (min r_bar; rules out sub-phi ratios, default 1.45)
+    max_ratio_cv : float  (max CV of ratios; filters noisy random clusters, default 0.35)
 
     Returns
     -------

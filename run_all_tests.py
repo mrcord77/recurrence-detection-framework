@@ -2,12 +2,12 @@
 """
 run_all_tests.py
 ----------------
-Runs all four evidence-hardening tests in sequence.
+Runs all evidence-hardening tests in sequence.
 Produces a single clean output suitable for documentation.
 
 Usage:
-    cd recurrence-detection-framework/framework_repo
-    PYTHONPATH=. python3 run_all_tests.py
+    cd recurrence-detection-framework
+    python run_all_tests.py
 
 Runtime: approximately 3-4 minutes total.
 """
@@ -126,7 +126,7 @@ def classify(mod, target, ts):
     try:
         r = mod.classify_flow(ts, connection_level=True, min_pkts=7)
         return r["classification"] == target, r.get("confidence", 0.0)
-    except:
+    except Exception:
         return False, 0.0
 
 
@@ -191,8 +191,6 @@ def run_test2():
     print(f"  RITA alert threshold: 0.70")
     print()
 
-    # Note: rotation uses 0% jitter — bounded detector jitter tolerance is ~1-2%
-    # (documented limitation in paper Section 10.4). Recurrence families use 10%.
     BEACONS = [
         ("fibonacci_beacon",  bh,  "ADDITIVE_RECURRENCE_BEACON",  fib_icis(20),  0.525, 0.10),
         ("tribonacci_beacon", th,  "TRIBONACCI_RECURRENCE_BEACON", trib_icis(15), 0.533, 0.10),
@@ -213,7 +211,7 @@ def run_test2():
         if fired:        b_det  += 1
         print(f"  {name:<22} {rita:>6.3f} {ceiling:>8.3f} "
               f"{'YES' if rita>=0.70 else 'no':>11} "
-              f"{'YES ✓' if fired else 'MISSED':>9} {conf:>6.3f}")
+              f"{'YES' if fired else 'MISSED':>9} {conf:>6.3f}")
 
     print()
     rng = np.random.default_rng(0)
@@ -319,7 +317,7 @@ def run_test3():
 def run_test5():
     print()
     print("=" * 72)
-    print("  TEST 5: GATE 2.5 DETECTION COST  ← PAPER CORRECTION REQUIRED")
+    print("  TEST 5: GATE 2.5 DETECTION COST")
     print("=" * 72)
     print(f"  Family: Fibonacci   n=20   Seeds: 100 per jitter level")
     print(f"  Gate 2.5 threshold: convergence slope < -0.008")
@@ -353,7 +351,6 @@ def run_test5():
         print(f"  jitter={jitter:>5.0%}  detected={det:>3}/{N_SEEDS} ({100*det/N_SEEDS:>5.1f}%)  "
               f"Gate2.5_reject={g25:>3}  Gate2_reject={g2:>2}  Gate1_reject={g1:>2}")
 
-    # Slope distribution at 10% jitter
     det_sl=[]; rej_sl=[]
     for seed in range(N_SEEDS):
         ts = make_ts(fib_icis(20), jitter=0.10, seed=seed)
@@ -380,11 +377,10 @@ def run_test5():
           f"{j20[1]}% at 20% jitter ({N_SEEDS} seeds)")
     print(f"    All misses caused by Gate 2.5 (convergence slope >= -0.008).")
     print(f"    This is a calibration trade-off, not a defect.")
-    print(f"    Must be corrected before submission.")
 
 
 # ===========================================================================
-# MAIN
+# TEST 6: MULTI-METHOD COMPARISON
 # ===========================================================================
 
 def _cv(ts):
@@ -512,18 +508,16 @@ if __name__ == "__main__":
     t0 = time.time()
 
     print()
-    print("╔" + "═"*70 + "╗")
-    print("║  EVIDENCE HARDENING — ALL TESTS                                      ║")
-    print("║  Structural Recurrence Detection Framework                            ║")
-    print("║  Andre Cordero, RepoSignal.io LLC                                    ║")
-    print("╚" + "═"*70 + "╝")
+    print("=" * 72)
+    print("  EVIDENCE HARDENING — ALL TESTS")
+    print("  Structural Recurrence Detection Framework")
+    print("  Andre Cordero, RepoSignal.io LLC")
+    print("=" * 72)
 
     run_test1()
     run_test2()
     run_test3()
     run_test5()
-
-
     run_test6()
 
     elapsed = time.time() - t0
@@ -542,67 +536,7 @@ if __name__ == "__main__":
     print("  3. Add n-sensitivity table (Test 3) to Section 8.4 n>=8 justification.")
     print("     (empirical detection cliff at n=6 vs n=8)")
     print()
-    print("  4. Correct Section 8.7 jitter tolerance claim. [REQUIRED BEFORE SUBMISSION]")
+    print("  4. Correct Section 8.7 jitter tolerance claim.")
     print("     Replace 'robust to 15-20%' with measured rates:")
     print("     78% at 10% jitter, 50% at 20% jitter (Fibonacci, n=20, 100 seeds).")
     print()
-
-# ===========================================================================
-# TEST 6: MULTI-METHOD COMPARISON
-# ===========================================================================
-
-def method_cv(ts):
-    icis = np.diff(np.array(sorted(ts)))
-    if len(icis) < 3: return 0.0, False
-    m = np.mean(icis)
-    if m == 0: return 0.0, False
-    cv = np.std(icis, ddof=1) / m
-    return round(cv, 4), cv <= 0.30
-
-def method_lomb_scargle(ts):
-    from scipy.signal import lombscargle as ls
-    icis = np.diff(np.array(sorted(ts)))
-    if len(icis) < 6: return 0.0, False
-    t = np.arange(len(icis), dtype=float)
-    y = icis - np.mean(icis)
-    if np.dot(y, y) < 1e-10: return 0.0, False
-    freqs = np.linspace(1./len(icis), 0.5, max(50, len(icis)*5))
-    try:
-        pgram = ls(t, y, 2*np.pi*freqs, normalize=True)
-        peak = float(np.max(pgram))
-    except Exception:
-        return 0.0, False
-    return round(peak, 4), peak >= 0.70
-
-def method_fft(ts):
-    arr = np.array(sorted(ts))
-    duration = arr[-1] - arr[0]
-    if duration < 1.0: return 0.0, False
-    icis = np.diff(arr)
-    bin_size = max(1.0, float(np.median(icis)) / 3.0)
-    n_bins = max(10, int(duration / bin_size))
-    bins, _ = np.histogram(arr, bins=n_bins)
-    y = bins.astype(float) - np.mean(bins)
-    spectrum = np.abs(np.fft.rfft(y))**2
-    total = np.sum(spectrum)
-    if total < 1e-10 or len(spectrum) < 2: return 0.0, False
-    return round(float(np.max(spectrum[1:])) / total, 4), float(np.max(spectrum[1:])) / total >= 0.30
-
-MM_METHODS = [
-    ("RITA",         lambda ts: (lambda icis: (lambda n,m,s,sk,sc,bim,rnd,cnt,tc,modal,streak: (
-        round((sc+bim+tc+streak/n)/4,4), (sc+bim+tc+streak/n)/4>=0.70
-    ))(
-        len(icis), np.mean(icis), np.std(icis,ddof=1) if len(icis)>1 else 0,
-        float(np.mean(((icis-np.mean(icis))/(np.std(icis,ddof=1)+1e-10))**3)) if np.std(icis,ddof=1)>0 else 0,
-        max(0.,1.-abs(float(np.mean(((icis-np.mean(icis))/(np.std(icis,ddof=1)+1e-10))**3)) if np.std(icis,ddof=1)>0 else 0)/3.),
-        sarles_bimodality(icis),
-        np.round(icis).astype(int),
-        np.unique(np.round(icis).astype(int), return_counts=True)[1],
-        float(np.unique(np.round(icis).astype(int), return_counts=True)[1].max())/len(icis),
-        np.unique(np.round(icis).astype(int))[np.argmax(np.unique(np.round(icis).astype(int), return_counts=True)[1])],
-        max([sum(1 for _ in g) for k,g in __import__('itertools').groupby(np.round(icis).astype(int)==np.unique(np.round(icis).astype(int))[np.argmax(np.unique(np.round(icis).astype(int), return_counts=True)[1])]) if k], default=0)
-    ))(np.diff(np.array(sorted(ts)))) if len(np.diff(np.array(sorted(ts))))>=3 else (0.0,False)),
-    ("CV",           method_cv),
-    ("Lomb-Scargle", method_lomb_scargle),
-    ("FFT",          method_fft),
-]

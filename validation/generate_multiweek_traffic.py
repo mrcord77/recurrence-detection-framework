@@ -28,6 +28,23 @@ import json
 import os
 import sys
 import time
+import importlib
+
+# ============================================================
+# REPO-RELATIVE SETUP
+# ============================================================
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO_ROOT)
+
+DETECTOR_FOLDERS = [
+    ("Beacon Hunter",     "beacon_hunter"),
+    ("Tribonacci Hunter", "tribonacci_hunter"),
+    ("Padovan Hunter",    "padovan_hunter"),
+    ("Narayana Hunter",   "narayana_hunter"),
+    ("Reverse Scanner",   "reverse_scanner"),
+    ("Bounded Hunter",    "bounded_hunter"),
+]
 
 # ============================================================
 # TRAFFIC GENERATORS (realistic enterprise patterns)
@@ -91,7 +108,7 @@ def user_browsing(duration_hours=8, seed=None):
     t = 0.0
     end = duration_hours * 3600
     while t < end:
-        # Alternate between active (λ=5s) and idle (λ=300s) periods
+        # Alternate between active (lambda=5s) and idle (lambda=300s) periods
         if rng.random() < 0.3:
             gap = rng.exponential(5.0)
         else:
@@ -179,46 +196,23 @@ if __name__ == "__main__":
             "timestamps": [round(t, 3) for t in f["timestamps"][:200]],  # Cap for file size
         })
 
-    with open("synthetic_multiweek_flows.json", "w") as fp:
+    out_path = os.path.join(REPO_ROOT, "synthetic_multiweek_flows.json")
+    with open(out_path, "w") as fp:
         json.dump(output, fp)
-    print(f"Saved {len(output)} flows to synthetic_multiweek_flows.json")
+    print(f"Saved {len(output)} flows to {out_path}")
     print()
 
-    # If detectors are available, test them
-    # User should adjust these paths
-    DETECTOR_PATHS = [
-        ("Beacon Hunter",     "./beacon_hunter_v0_3_0"),
-        ("Prime Hunter",      "./prime_hunter_v1_1"),
-        ("Tribonacci Hunter", "./tribonacci_hunter_v1_1"),
-        ("Padovan Hunter",    "./padovan_hunter_v1_1"),
-        ("Power Hunter",      "./power_hunter_v1_1"),
-        ("Narayana Hunter",   "./narayana_hunter_v1_1"),
-        ("Reverse Scanner",   "./reverse_scanner_v1_1"),
-        ("Bounded Hunter",    "./bounded_hunter_v1_0"),
-    ]
-
-    import importlib.util
+    # Load detectors via repo-relative imports
     detectors = []
-    for name, path in DETECTOR_PATHS:
-        full_path = os.path.abspath(os.path.join(os.path.dirname(__file__) or '.', path))
-        spec_path = os.path.join(full_path, "detectors.py")
-        if not os.path.exists(spec_path):
-            continue
-        safe_name = name.replace(" ", "_").lower()
-        spec = importlib.util.spec_from_file_location(f"det_{safe_name}", spec_path)
-        mod = importlib.util.module_from_spec(spec)
-        sys.path.insert(0, full_path)
+    for name, folder in DETECTOR_FOLDERS:
         try:
-            spec.loader.exec_module(mod)
+            mod = importlib.import_module(f"detectors.{folder}.detectors")
             detectors.append((name, mod))
-        except:
+        except Exception:
             pass
-        finally:
-            if full_path in sys.path:
-                sys.path.remove(full_path)
 
     if not detectors:
-        print("No detectors found. Adjust DETECTOR_PATHS to test against detectors.")
+        print("No detectors found. Check that detector modules exist under detectors/.")
         print("You can still use the saved JSON to test externally.")
         sys.exit(0)
 
@@ -261,6 +255,6 @@ if __name__ == "__main__":
     print(f"Total flags: {total_flags}")
     print(f"Total errors: {total_errors}")
     if total_flags == 0 and total_errors == 0:
-        print("✓ ZERO false positives across all traffic types × all detectors.")
+        print("+ ZERO false positives across all traffic types x all detectors.")
     else:
         print(f"FPR upper bound: {total_flags}/{total*len(detectors)} = {total_flags/(total*len(detectors))*100:.3f}%")

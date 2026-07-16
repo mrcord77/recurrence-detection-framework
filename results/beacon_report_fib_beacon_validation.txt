@@ -1,0 +1,42 @@
+=================================================================
+  BEACON HUNTER
+  2026-05-20 22:19:19
+=================================================================
+
+  Mode     : PCAP
+  File     : fib_beacon_validation.pcapng
+  Packets  : 1,587
+  Duration : 480.0s  (8.0 min)
+  Flows    : 25
+
+  Classifying 25 flows  (min_pkts=5, session_gap=2.0s)...
+
+=================================================================
+  FLAGGED FLOWS  (2)
+=================================================================
+  Flow : 127.0.0.1->127.0.0.1:9999 (tcp) [conn-grouped]
+    Result      : FIBONACCI_BEACON (score 88%)
+    Packets     : 8   Connections: 8
+    Mean IAT    : 37.86s   CV: 0.8814   KS p: N/A
+    ICI mean    : 37.86s
+    Ratio r̅       : 1.6679   Δφ: 0.0498   (φ = 1.618034)  ratio_cv: 0.094   [FIBONACCI]
+    Recurrence    : rel_err=0.0000   p=0.000   [FIBONACCI]
+
+  Flow : 192.168.254.91:12345->255.255.255.255 :12345 (udp)
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 49   Connections: 49
+    Mean IAT    : 10.00s   CV: 0.0005   KS p: 0.0000
+    ICI mean    : 10.00s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.001   [REGULAR]
+
+=================================================================
+  SUMMARY
+=================================================================
+  Total flows analyzed : 26
+  Flagged              : 2
+    Fibonacci beacons  : 1
+    Regular beacons    : 1
+    Jittered beacons   : 0
+    Non-physical       : 0
+  Background           : 22
+  Insufficient data    : 2

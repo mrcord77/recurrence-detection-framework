@@ -23,7 +23,7 @@ import importlib
 import numpy as np
 
 # Add repo root to path so detector imports work
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ---------------------------------------------------------------------------
 # Load detectors

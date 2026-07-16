@@ -1,0 +1,77 @@
+{
+  "baseline_24h": {
+    "duration_hours": 25.2,
+    "total_flows": 1429,
+    "analyzed_flows_5plus": 243,
+    "flag_counts": {
+      "JITTERED_BEACON": 15,
+      "BACKGROUND": 212,
+      "REGULAR_BEACON": 13,
+      "NON_PHYSICAL": 2,
+      "ADDITIVE_RECURRENCE_BEACON": 1
+    },
+    "fpr_additive_recurrence": 0.00412
+  },
+  "injection_results": [
+    {
+      "jitter": 0.0,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": true,
+      "bh_score": 0.928,
+      "rita_score": 0.3151,
+      "rita_label": "BACKGROUND",
+      "bh_class": "ADDITIVE_RECURRENCE_BEACON"
+    },
+    {
+      "jitter": 0.05,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": true,
+      "bh_score": 0.843,
+      "rita_score": 0.3195,
+      "rita_label": "BACKGROUND",
+      "bh_class": "ADDITIVE_RECURRENCE_BEACON"
+    },
+    {
+      "jitter": 0.1,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": true,
+      "bh_score": 0.801,
+      "rita_score": 0.3081,
+      "rita_label": "BACKGROUND",
+      "bh_class": "ADDITIVE_RECURRENCE_BEACON"
+    },
+    {
+      "jitter": 0.2,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": true,
+      "bh_score": 0.433,
+      "rita_score": 0.2579,
+      "rita_label": "BACKGROUND",
+      "bh_class": "ADDITIVE_RECURRENCE_BEACON"
+    },
+    {
+      "jitter": 0.25,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": false,
+      "bh_score": 1.0,
+      "rita_score": 0.2951,
+      "rita_label": "BACKGROUND",
+      "bh_class": "BACKGROUND"
+    },
+    {
+      "jitter": 0.3,
+      "base_s": 60.0,
+      "n_intervals": 12,
+      "detected": true,
+      "bh_score": 0.498,
+      "rita_score": 0.2961,
+      "rita_label": "BACKGROUND",
+      "bh_class": "ADDITIVE_RECURRENCE_BEACON"
+    }
+  ]
+}

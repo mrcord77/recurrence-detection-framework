@@ -1,0 +1,104 @@
+=================================================================
+  BEACON HUNTER
+  2026-05-20 22:19:15
+=================================================================
+
+  Mode     : PCAP
+  File     : jit_var_d30_j0_1h.pcap
+  Packets  : 23,613
+  Duration : 3599.6s  (60.0 min)
+  Flows    : 3,537
+
+  Classifying 3537 flows  (min_pkts=5, session_gap=5.0s)...
+
+=================================================================
+  FLAGGED FLOWS  (11)
+=================================================================
+  Flow : 192.168.2.14:7680->192.168.2.79 :54026 (tcp)
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 60   Connections: 60
+    Mean IAT    : 60.03s   CV: 0.1122   KS p: 0.0000
+    ICI mean    : 60.03s
+    Ratio r̅       : 1.0254   Δφ: 0.5927   (φ = 1.618034)  ratio_cv: 0.221   [JITTERED]
+
+  Flow : 192.168.2.79:54026->192.168.2.14 :7680 (tcp)
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 60   Connections: 60
+    Mean IAT    : 60.02s   CV: 0.1138   KS p: 0.0000
+    ICI mean    : 60.02s
+    Ratio r̅       : 1.0261   Δφ: 0.5919   (φ = 1.618034)  ratio_cv: 0.224   [JITTERED]
+
+  Flow : 52.226.139.121:443->192.168.2.77 :52377 (tcp)
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 17   Connections: 17
+    Mean IAT    : 210.00s   CV: 0.1668   KS p: 0.0000
+    ICI mean    : 210.00s
+    Ratio r̅       : 1.0344   Δφ: 0.5837   (φ = 1.618034)  ratio_cv: 0.331   [JITTERED]
+
+  Flow : 192.168.2.77->192.168.2.1:53 (udp) [conn-grouped]
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 255   Connections: 255
+    Mean IAT    : 14.06s   CV: 0.6157   KS p: 0.0000
+    ICI mean    : 14.34s
+    Ratio r̅       : 1007.7914   Δφ: 1006.1734   (φ = 1.618034)  ratio_cv: 2.578   [IRREGULAR]
+
+  Flow : 192.168.2.19->185.125.190.98:80 (tcp) [conn-grouped]
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 21   Connections: 21
+    Mean IAT    : 173.43s   CV: 0.6462   KS p: 0.0479
+    ICI mean    : 173.43s
+    Ratio r̅       : 3.3248   Δφ: 1.7067   (φ = 1.618034)  ratio_cv: 1.698   [IRREGULAR]
+
+  Flow : 192.168.2.65->239.255.255.250:1900 (udp) [conn-grouped]
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 31   Connections: 31
+    Mean IAT    : 116.00s   CV: 0.1805   KS p: 0.0000
+    ICI mean    : 116.00s
+    Ratio r̅       : 2.1613   Δφ: 0.5433   (φ = 1.618034)  ratio_cv: 2.927   [JITTERED]
+
+  Flow : 192.168.2.1:9431->192.168.2.255 :9431 (udp)
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 720   Connections: 631
+    Mean IAT    : 5.00s   CV: 0.0001   KS p: 0.0000
+    ICI mean    : 5.71s
+    Ratio r̅       : 1.0616   Δφ: 0.5564   (φ = 1.618034)  ratio_cv: 0.392   [JITTERED]
+
+  Flow : 192.168.2.1:49001->224.0.0.251 :5353 (udp)
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 120   Connections: 120
+    Mean IAT    : 30.00s   CV: 0.0001   KS p: 0.0000
+    ICI mean    : 30.00s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+  Flow : 192.168.2.82->192.168.2.14:7680 (tcp) [conn-grouped]
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 90   Connections: 90
+    Mean IAT    : 40.11s   CV: 0.0018   KS p: 0.0000
+    ICI mean    : 40.11s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.003   [REGULAR]
+
+  Flow : 192.168.2.77->143.198.3.13:80 (tcp) [conn-grouped]
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 119   Connections: 119
+    Mean IAT    : 30.05s   CV: 0.0003   KS p: 0.0000
+    ICI mean    : 30.05s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+  Flow : 192.168.2.77->239.255.255.250:1900 (udp) [conn-grouped]
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 30   Connections: 30
+    Mean IAT    : 120.01s   CV: 0.0000   KS p: 0.0000
+    ICI mean    : 120.01s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+=================================================================
+  SUMMARY
+=================================================================
+  Total flows analyzed : 3,543
+  Flagged              : 11
+    Fibonacci beacons  : 0
+    Regular beacons    : 5
+    Jittered beacons   : 6
+    Non-physical       : 0
+  Background           : 991
+  Insufficient data    : 2541

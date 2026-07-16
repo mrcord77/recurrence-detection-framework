@@ -1,0 +1,245 @@
+=================================================================
+  BEACON HUNTER
+  2026-05-28 02:19:42
+=================================================================
+
+  Mode     : ZEEK conn.log
+  File     : conn_24h.log
+  Records  : 59,184
+  Duration : 90709.6s  (1511.8 min)
+  Flows    : 1,424
+
+  Classifying 1424 flows  (min_pkts=5, session_gap=5.0s)...
+
+=================================================================
+  FLAGGED FLOWS  (31)
+=================================================================
+  Flow : fe80::5220:65ff:fe3f:56c3->ff02::2:134
+    Result      : ADDITIVE_RECURRENCE_BEACON (score 34%)
+    Packets     : 6   Connections: 6
+    Mean IAT    : 745.71s   CV: 0.8111   KS p: N/A
+    ICI mean    : 745.71s
+    Ratio r̅       : 1.7215   Δφ: 0.1034   (φ = 1.618034)  ratio_cv: 0.246   [FIBONACCI]
+    Recurrence    : rel_err=0.1618   p=0.018   [FIBONACCI]
+
+  Flow : 192.168.2.88->151.101.46.172:80
+    Result      : NON_PHYSICAL (score 60%)
+    Packets     : 31   Connections: 31
+    Mean IAT    : 1617.13s   CV: 3.5813   KS p: 0.0000
+    ICI mean    : 1617.13s
+    Ratio r̅       : 2096.2074   Δφ: 2094.5893   (φ = 1.618034)  ratio_cv: 5.278   [IRREGULAR]
+
+  Flow : 192.168.2.15->224.0.0.251:5353
+    Result      : NON_PHYSICAL (score 60%)
+    Packets     : 26   Connections: 26
+    Mean IAT    : 984.97s   CV: 4.3496   KS p: 0.0000
+    ICI mean    : 984.97s
+    Ratio r̅       : 46.5441   Δφ: 44.9261   (φ = 1.618034)  ratio_cv: 4.265   [IRREGULAR]
+
+  Flow : 192.168.2.77->143.198.3.13:80
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 3,282   Connections: 3282
+    Mean IAT    : 26.32s   CV: 0.0811   KS p: 0.0000
+    ICI mean    : 26.32s
+    Ratio r̅       : 1.0066   Δφ: 0.6114   (φ = 1.618034)  ratio_cv: 0.115   [REGULAR]
+
+  Flow : 192.168.2.14->192.168.2.79:7680
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 2,222   Connections: 2222
+    Mean IAT    : 38.90s   CV: 0.6209   KS p: 0.0000
+    ICI mean    : 39.57s
+    Ratio r̅       : 1000.5617   Δφ: 998.9437   (φ = 1.618034)  ratio_cv: 19.750   [IRREGULAR]
+
+  Flow : fe80::154:54c7:7cb2:3b52->ff02::fb:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 918   Connections: 918
+    Mean IAT    : 94.17s   CV: 0.3679   KS p: 0.0000
+    ICI mean    : 94.17s
+    Ratio r̅       : 1.3487   Δφ: 0.2693   (φ = 1.618034)  ratio_cv: 0.953   [JITTERED]
+
+  Flow : 192.168.2.14->224.0.0.251:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 919   Connections: 919
+    Mean IAT    : 94.07s   CV: 0.3689   KS p: 0.0000
+    ICI mean    : 94.07s
+    Ratio r̅       : 1.3538   Δφ: 0.2642   (φ = 1.618034)  ratio_cv: 0.959   [JITTERED]
+
+  Flow : 192.168.2.14->192.168.2.82:7680
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 2,220   Connections: 2220
+    Mean IAT    : 38.90s   CV: 0.6186   KS p: 0.0000
+    ICI mean    : 39.48s
+    Ratio r̅       : 25484.2625   Δφ: 25482.6445   (φ = 1.618034)  ratio_cv: 45.281   [IRREGULAR]
+
+  Flow : fe80::8843:e132:7146:cc64->ff02::fb:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 915   Connections: 915
+    Mean IAT    : 94.37s   CV: 0.3652   KS p: 0.0000
+    ICI mean    : 94.37s
+    Ratio r̅       : 1.4840   Δφ: 0.1341   (φ = 1.618034)  ratio_cv: 1.268   [JITTERED]
+
+  Flow : 192.168.2.82->224.0.0.251:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 916   Connections: 916
+    Mean IAT    : 94.26s   CV: 0.3663   KS p: 0.0000
+    ICI mean    : 94.26s
+    Ratio r̅       : 1.4909   Δφ: 0.1271   (φ = 1.618034)  ratio_cv: 1.272   [JITTERED]
+
+  Flow : 192.168.2.14->192.168.2.255:138
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 192   Connections: 192
+    Mean IAT    : 450.60s   CV: 0.4499   KS p: 0.0000
+    ICI mean    : 450.60s
+    Ratio r̅       : 1.4765   Δφ: 0.1415   (φ = 1.618034)  ratio_cv: 0.836   [IRREGULAR]
+
+  Flow : 192.168.2.79->224.0.0.251:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 887   Connections: 887
+    Mean IAT    : 97.39s   CV: 0.3269   KS p: 0.0000
+    ICI mean    : 97.39s
+    Ratio r̅       : 1.2976   Δφ: 0.3205   (φ = 1.618034)  ratio_cv: 1.086   [JITTERED]
+
+  Flow : fe80::230b:621a:2076:6a34->ff02::fb:5353
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 887   Connections: 887
+    Mean IAT    : 97.39s   CV: 0.3269   KS p: 0.0000
+    ICI mean    : 97.39s
+    Ratio r̅       : 1.2976   Δφ: 0.3205   (φ = 1.618034)  ratio_cv: 1.086   [JITTERED]
+
+  Flow : 192.168.2.77->20.187.55.34:443
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 52   Connections: 52
+    Mean IAT    : 1446.67s   CV: 0.2485   KS p: 0.0000
+    ICI mean    : 1446.67s
+    Ratio r̅       : 1.0136   Δφ: 0.6044   (φ = 1.618034)  ratio_cv: 0.292   [JITTERED]
+
+  Flow : 192.168.2.77->52.137.125.63:443
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 44   Connections: 44
+    Mean IAT    : 1987.44s   CV: 0.3225   KS p: 0.0000
+    ICI mean    : 1987.44s
+    Ratio r̅       : 1.1119   Δφ: 0.5062   (φ = 1.618034)  ratio_cv: 0.486   [JITTERED]
+
+  Flow : 192.168.2.87->204.79.197.239:443
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 38   Connections: 38
+    Mean IAT    : 2239.54s   CV: 0.6908   KS p: 0.0015
+    ICI mean    : 2239.54s
+    Ratio r̅       : 5.7360   Δφ: 4.1180   (φ = 1.618034)  ratio_cv: 2.120   [IRREGULAR]
+
+  Flow : 192.168.2.82->204.79.197.239:443
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 30   Connections: 30
+    Mean IAT    : 2855.18s   CV: 0.5102   KS p: 0.0037
+    ICI mean    : 2855.18s
+    Ratio r̅       : 6.1140   Δφ: 4.4959   (φ = 1.618034)  ratio_cv: 2.502   [IRREGULAR]
+
+  Flow : 192.168.2.84->104.46.162.227:443
+    Result      : JITTERED_BEACON (score 80%)
+    Packets     : 11   Connections: 11
+    Mean IAT    : 1.93s   CV: 0.3708   KS p: 0.0235
+    ICI mean    : 1.93s
+    Ratio r̅       : 1.1939   Δφ: 0.4241   (φ = 1.618034)  ratio_cv: 0.493   [JITTERED]
+
+  Flow : 192.168.2.1->224.0.0.251:5353
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 2,880   Connections: 2880
+    Mean IAT    : 30.00s   CV: 0.0014   KS p: 0.0000
+    ICI mean    : 30.00s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.002   [REGULAR]
+
+  Flow : 192.168.2.82->239.255.255.250:1900
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 725   Connections: 725
+    Mean IAT    : 119.17s   CV: 0.0618   KS p: 0.0000
+    ICI mean    : 119.17s
+    Ratio r̅       : 1.0093   Δφ: 0.6088   (φ = 1.618034)  ratio_cv: 0.226   [REGULAR]
+
+  Flow : 192.168.2.77->239.255.255.250:1900
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 725   Connections: 725
+    Mean IAT    : 119.18s   CV: 0.0763   KS p: 0.0000
+    ICI mean    : 119.18s
+    Ratio r̅       : 1.2243   Δφ: 0.3938   (φ = 1.618034)  ratio_cv: 3.600   [REGULAR]
+
+  Flow : 192.168.2.82->192.168.2.14:7680
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 1,075   Connections: 1075
+    Mean IAT    : 80.31s   CV: 0.0016   KS p: 0.0000
+    ICI mean    : 80.31s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.002   [REGULAR]
+
+  Flow : 192.168.2.87->239.255.255.250:1900
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 725   Connections: 725
+    Mean IAT    : 119.17s   CV: 0.0660   KS p: 0.0000
+    ICI mean    : 119.17s
+    Ratio r̅       : 1.0472   Δφ: 0.5709   (φ = 1.618034)  ratio_cv: 1.118   [REGULAR]
+
+  Flow : 192.168.2.79->239.255.255.250:1900
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 727   Connections: 727
+    Mean IAT    : 118.85s   CV: 0.0766   KS p: 0.0000
+    ICI mean    : 118.85s
+    Ratio r̅       : 1.0187   Δφ: 0.5993   (φ = 1.618034)  ratio_cv: 0.302   [REGULAR]
+
+  Flow : 192.168.2.14->239.255.255.250:1900
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 720   Connections: 720
+    Mean IAT    : 120.01s   CV: 0.0000   KS p: 0.0000
+    ICI mean    : 120.01s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+  Flow : 192.168.2.77->192.168.2.255:138
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 120   Connections: 120
+    Mean IAT    : 720.01s   CV: 0.0025   KS p: 0.0000
+    ICI mean    : 720.01s
+    Ratio r̅       : 1.0000   Δφ: 0.6181   (φ = 1.618034)  ratio_cv: 0.004   [REGULAR]
+
+  Flow : 192.168.2.84->192.168.2.255:138
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 120   Connections: 120
+    Mean IAT    : 720.23s   CV: 0.0024   KS p: 0.0000
+    ICI mean    : 720.23s
+    Ratio r̅       : 1.0000   Δφ: 0.6181   (φ = 1.618034)  ratio_cv: 0.004   [REGULAR]
+
+  Flow : 192.168.2.19->185.125.190.58:123
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 42   Connections: 42
+    Mean IAT    : 2048.25s   CV: 0.0000   KS p: 0.0000
+    ICI mean    : 2048.25s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+  Flow : fe80::6a6f:2ae7:422e:b6d3->ff02::2:134
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 24   Connections: 24
+    Mean IAT    : 3514.60s   CV: 0.0609   KS p: 0.0000
+    ICI mean    : 3514.60s
+    Ratio r̅       : 1.0037   Δφ: 0.6144   (φ = 1.618034)  ratio_cv: 0.087   [REGULAR]
+
+  Flow : fe80::6a6f:2ae7:422e:b6d3->ff02::fb:5353
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 24   Connections: 24
+    Mean IAT    : 3600.01s   CV: 0.0000   KS p: 0.0000
+    ICI mean    : 3600.01s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+  Flow : 192.168.2.19->224.0.0.251:5353
+    Result      : REGULAR_BEACON (score 100%)
+    Packets     : 24   Connections: 24
+    Mean IAT    : 3600.01s   CV: 0.0000   KS p: 0.0000
+    ICI mean    : 3600.01s
+    Ratio r̅       : 1.0000   Δφ: 0.6180   (φ = 1.618034)  ratio_cv: 0.000   [REGULAR]
+
+=================================================================
+  SUMMARY
+=================================================================
+  Total flows analyzed : 1,424
+  Flagged              : 31
+    Phi-recurrence beacons  : 1
+    Regular beacons    : 13
+    Jittered beacons   : 15
+    Non-physical       : 2
+  Background           : 212
+  Insufficient data    : 1181
